@@ -1,0 +1,116 @@
+// src/components/Pricing.tsx
+import { Check, Clock } from "lucide-react";
+
+const plans = [
+  {
+    name: "Essencial",
+    price: "R$ 97/mês",
+    popular: false,
+    slogan: "Sua recepção automática, 24 horas por dia.",
+    features: [
+      "Assistente de IA com Base de Conhecimento (PDF)",
+      "1 Rede Social Conectada (WhatsApp)",      
+      "Histórico de Conversas",
+      "Suporte Padrão (email e tickets)",
+      { text: "CRM Básico", soon: true },
+    ],
+  },
+  {
+    name: "Pro",
+    price: "R$ 197/mês",
+    popular: true,
+    slogan: "Transforme conversas em reservas pagas.",
+    features: [
+      "Tudo do Essencial",
+      "Agendamento e Reservas Inteligentes (Google Agenda)",
+      "Confirmação com Pagamento Online",      
+      "Lembretes Automáticos de check-in e reservas",
+      "Relatórios de Atendimento",
+      "Suporte Prioritário (chat)",
+      { text: "CRM Completo", soon: true },
+    ],
+  },
+  {
+    name: "Business",
+    price: "R$ 297/mês",
+    popular: false,
+    slogan: "Domine sua comunicação em todos os canais.",
+    features: [
+      "Tudo do Pro",
+      "Conexão Multi-canal (WhatsApp, Instagram, Facebook Messenger)",      
+      "Dashboard Executivo e Relatórios Avançados",
+      "Suporte Prioritário (chat)",
+      { text: "CRM Enterprise", soon: true },
+    ],
+  },
+];
+
+export default function Pricing() {
+  return (
+    <section id="planos" className="bg-gray-50 py-20">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          Escolha o plano ideal
+        </h2>
+        <p className="mt-4 text-lg text-gray-600">
+          Comece pequeno e evolua junto com o seu negócio
+        </p>
+
+        <div className="mt-16 grid gap-8 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <div
+              key={plan.name}
+              className={`rounded-2xl shadow-lg p-8 flex flex-col ${
+                plan.popular ? "border-2 border-teal-600" : "border border-gray-200"
+              } bg-teal-50`}
+            >
+              {plan.popular && (
+                <span className="mb-3 inline-block rounded-full bg-teal-100 text-teal-800 text-sm font-medium px-3 py-1">
+                  Mais Popular
+                </span>
+              )}
+              <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+              <p className="mt-1 text-sm text-gray-600">{plan.slogan}</p>
+              <p className="mt-4 text-3xl font-extrabold text-gray-900">{plan.price}</p>
+
+              <ul className="mt-6 space-y-4 flex-1 text-left">
+                {plan.features.map((feature, i) => {
+                  const isObj = typeof feature !== "string";
+                  const text = isObj ? feature.text : feature;
+                  const soon = isObj && feature.soon;
+
+                  return (
+                    <li key={i} className="flex items-center gap-2 text-gray-700">
+                      {soon ? (
+                        <Clock className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <Check className="h-5 w-5 text-teal-600" />
+                      )}
+                      <span>
+                        {text}{" "}
+                        {soon && (
+                          <span className="ml-1 text-xs font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            Em Breve
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+
+             <button // Adicionando onClick para o botão
+                className={`mt-8 w-full rounded-xl px-4 py-3 font-semibold shadow-md transition 
+                    ${plan.popular ? "bg-teal-600 text-white" : "bg-gray-400 text-gray-800"} 
+                    hover:bg-teal-600 hover:text-white`}
+                >
+                Assinar {plan.name}
+            </button>
+
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
