@@ -18,7 +18,7 @@ export const Hero = () => {
             no balcão.
           </h1>
           <p className="mt-6 text-lg text-gray-600">
-            Seu recepcionista virtual 24h no WhatsApp, treinado por você.
+            Automatize o agendamento e o atendimento 24h do seu hotel no WhatsApp com Alfred,seu recepcionista virtual inteligente, treinado por você.
           </p>
           <div className="mt-8 flex gap-4">
             <a

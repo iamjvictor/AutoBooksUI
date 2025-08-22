@@ -1,49 +1,7 @@
 // src/components/Pricing.tsx
 import { Check, Clock } from "lucide-react";
 
-const plans = [
-  {
-    name: "Essencial",
-    price: "R$ 97/mês",
-    popular: false,
-    slogan: "Sua recepção automática, 24 horas por dia.",
-    features: [
-      "Assistente de IA com Base de Conhecimento (PDF)",
-      "1 Rede Social Conectada (WhatsApp)",      
-      "Histórico de Conversas",
-      "Suporte Padrão (email e tickets)",
-      { text: "CRM Básico", soon: true },
-    ],
-  },
-  {
-    name: "Pro",
-    price: "R$ 197/mês",
-    popular: true,
-    slogan: "Transforme conversas em reservas pagas.",
-    features: [
-      "Tudo do Essencial",
-      "Agendamento e Reservas Inteligentes (Google Agenda)",
-      "Confirmação com Pagamento Online",      
-      "Lembretes Automáticos de check-in e reservas",
-      "Relatórios de Atendimento",
-      "Suporte Prioritário (chat)",
-      { text: "CRM Completo", soon: true },
-    ],
-  },
-  {
-    name: "Business",
-    price: "R$ 297/mês",
-    popular: false,
-    slogan: "Domine sua comunicação em todos os canais.",
-    features: [
-      "Tudo do Pro",
-      "Conexão Multi-canal (WhatsApp, Instagram, Facebook Messenger)",      
-      "Dashboard Executivo e Relatórios Avançados",
-      "Suporte Prioritário (chat)",
-      { text: "CRM Enterprise", soon: true },
-    ],
-  },
-];
+import { plans } from "../data/plans";
 
 export default function Pricing() {
   return (
