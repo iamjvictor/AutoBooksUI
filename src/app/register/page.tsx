@@ -6,7 +6,7 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 
 import React, { useState } from "react";
-import Navigation from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   // Estado para gerenciar os dados do formulário
@@ -24,7 +24,7 @@ export default function RegisterPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const nav = Navigation.useRouter();
+  const nav = useRouter();
 
   // Estado para gerenciar o erro de senha
   const [passwordError, setPasswordError] = useState("");
