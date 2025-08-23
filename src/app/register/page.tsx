@@ -11,7 +11,12 @@ import Toast from "@/components/common/Toast";
 
 
 export default function RegisterPage() {
-  // Estado para gerenciar os dados do formulário
+  
+const estadosBrasileiros = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+  "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -43,7 +48,7 @@ export default function RegisterPage() {
   // Estado para gerenciar o erro de senha
   const [passwordError, setPasswordError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement  | HTMLSelectElement> ) => {
     const { name, value } = e.target;
     
     // Verifica se o campo que mudou pertence à localização
@@ -84,16 +89,9 @@ export default function RegisterPage() {
 
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setToast(null);
     
-    // --- VALIDAÇÃO CENTRALIZADA AQUI ---
-    if (formData.password.length < 8) {
-      showToast("A senha deve ter pelo menos 8 caracteres.");
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      showToast("As senhas não coincidem.");
-      return;
-    }
+    
 
     setIsSubmitting(true);   
 
@@ -105,9 +103,22 @@ const handleSubmit = async (e: React.FormEvent) => {
       });
       
       const responseData = await response.json();
-      if (!response.ok) {
-        throw new Error(responseData.message || 'Ocorreu um erro ao criar a conta.');
-      }
+        if (!response.ok) {
+          
+          if (responseData.errors) {
+            // Se o backend enviou os erros detalhados do Zod...
+            // Pega a primeira mensagem de erro do primeiro campo que falhou.
+            const firstErrorField = Object.keys(responseData.errors)[0];
+            const firstErrorMessage = responseData.errors[firstErrorField][0];
+            showToast(firstErrorMessage); // ...e exibe no toast!
+          } else {
+            // Se foi outro tipo de erro do backend, mostra a mensagem principal.
+            showToast(responseData.message || "Ocorreu um erro ao processar sua solicitação.");
+          }
+          
+          setIsSubmitting(false); // Para o loading
+          return; // PARA a execução aqui.
+        }
       
       console.log("Conta criada com sucesso no backend!", responseData.user);  
       
@@ -149,19 +160,19 @@ const handleSubmit = async (e: React.FormEvent) => {
           
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Nome completo</label>
-            <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Seu nome" required className="mt-1 block w-full input-style" />
+            <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Seu nome"  className="mt-1 block w-full input-style" />
           </div>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com" required className="mt-1 block w-full input-style" />
+            <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com"  className="mt-1 block w-full input-style" />
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">Crie uma senha</label>
-            <input type="password" id="password" name="password" value={formData.password} onChange={handlePasswordChange} placeholder="Mínimo 8 caracteres" required className="mt-1 block w-full input-style" />
+            <input type="password" id="password" name="password" value={formData.password} onChange={handlePasswordChange} placeholder="Mínimo 8 caracteres"  className="mt-1 block w-full input-style" />
           </div>
           <div>
             <label htmlFor="confirmPassword"className="block text-sm font-medium text-gray-700">Confirme sua senha</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handlePasswordChange} placeholder="Repita a senha" required className="mt-1 block w-full input-style" />
+            <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword} onChange={handlePasswordChange} placeholder="Repita a senha"  className="mt-1 block w-full input-style" />
             {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
           </div>
           <div>
@@ -170,7 +181,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
           <div>
             <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700">Número do WhatsApp</label>
-            <input type="tel" id="whatsappNumber" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleChange} placeholder="(XX) 9XXXX-XXXX" required className="mt-1 block w-full input-style" />
+            <input type="tel" id="whatsappNumber" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleChange} placeholder="(XX) 9XXXX-XXXX"  className="mt-1 block w-full input-style" />
           </div>
           <div>
             <label htmlFor="address" className="block text-sm font-medium text-gray-700">Endereço</label>
@@ -183,7 +194,18 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
             <div>
               <label htmlFor="state" className="block text-sm font-medium text-gray-700">Estado</label>
-              <input type="text" id="state" name="state" value={formData.businessLocation.state} onChange={handleChange} className="mt-1 block w-full input-style" />
+              <select 
+                id="state" 
+                name="state" 
+                value={formData.businessLocation.state} 
+                onChange={handleChange} 
+                className="mt-1 block w-full input-style"
+              >
+                <option value="" disabled>Selecione...</option>
+                {estadosBrasileiros.map(uf => (
+                  <option key={uf} value={uf}>{uf}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700">CEP</label>
