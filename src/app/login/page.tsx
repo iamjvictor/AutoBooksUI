@@ -1,8 +1,52 @@
-// src/app/login/page.tsx
+// src/app/login/page.tsx"
+"use client";
 import { Bell } from "lucide-react";
 import Link from "next/link";
-
+import { createClient } from "@/clients/supabaseClient";
+import { useRef } from "react";
+import { useState } from "react";
+import Toast from "@/components/common/Toast";
+import { useRouter } from "next/navigation";
+ 
 export default function LoginPage() {
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  const nav = useRouter();
+  const supabase = createClient();
+
+  const showToast = (message: string, type: 'success' | 'error' = 'error') => {
+   
+    setToast({ message, type });
+  };
+  const doLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setToast(null);
+
+    const email = emailRef.current?.value;
+    const password = passwordRef.current?.value;
+
+    if (!email || !password) {
+      showToast("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+      nav.push("/");
+
+      console.log("Usuário autenticado com sucesso:");
+    } catch (error) {
+      showToast((error as Error).message);
+    }
+  }
+
   return (
     <main className="flex items-center justify-center min-h-screen bg-teal-600">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
@@ -14,8 +58,16 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {toast && (
+                    <Toast 
+                      message={toast.message} 
+                      type={toast.type} 
+                      onClose={() => setToast(null)} 
+                    />
+                  )}
+
         {/* Formulário */}
-        <form className="space-y-6">
+        <form onSubmit={doLogin} className="space-y-6">
           {/* Campo de Email */}
           <div>
             <label 
@@ -27,10 +79,11 @@ export default function LoginPage() {
             <input
               type="email"
               id="email"
+              ref={emailRef}
               name="email"
               placeholder="seu@email.com"
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 text-black focus:border-teal-500"
-              required
+              
             />
           </div>
 
@@ -45,10 +98,11 @@ export default function LoginPage() {
             <input
               type="password"
               id="password"
+              ref={passwordRef}
               name="password"
               placeholder="********"
               className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none text-black focus:ring-teal-500 focus:border-teal-500"
-              required
+              
             />
           </div>
 
