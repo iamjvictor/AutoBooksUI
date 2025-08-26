@@ -3,6 +3,9 @@
 
 import React, { useState } from "react";
 import { Check,UploadCloud, FileText, X } from "lucide-react";
+import { createClient } from "@/clients/supabaseClient";
+
+
 
 interface PdfUploadProps {
   onComplete: () => void;
@@ -13,6 +16,7 @@ const MAX_FILES = 3;
 export default function PdfUpload({ onComplete }: PdfUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const supabase = createClient();
 
   const handleFiles = (files: FileList) => {
     const newFiles = Array.from(files).filter(file => file.type === 'application/pdf');
@@ -62,14 +66,38 @@ export default function PdfUpload({ onComplete }: PdfUploadProps) {
     setSelectedFiles(prevFiles => prevFiles.filter((_, index) => index !== indexToRemove));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (selectedFiles.length === 0) {
       alert("Por favor, selecione pelo menos um arquivo PDF.");
       return;
     }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Usuário não autenticado.");
 
-    // --- LÓGICA DE UPLOAD PARA O BACKEND ENTRA AQUI ---
-    // Você fará um loop ou enviará todos os arquivos de uma vez
+    const formData = new FormData();
+    // Adiciona TODOS os arquivos ao mesmo FormData com o nome de campo no plural
+    selectedFiles.forEach(file => {
+        formData.append('pdfFile', file); 
+    });
+
+    // A URL do endpoint também foi para o plural
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads/document`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session?.access_token}` },
+        body: formData,
+    });
+
+    if (!response.ok) {
+          const errorData = await response.json();
+          console.error('API retornou um erro:', errorData);
+          // Lança um erro para ser pego pelo bloco 'catch'
+          throw new Error(errorData.message || "Falha no upload do PDF.");
+      }
+      
+      // Se chegamos aqui, o upload foi um sucesso!
+    const successData = await response.json();
+
+    console.log('--- 5. Upload bem-sucedido! ---', successData);
     console.log("Arquivos a serem enviados:", selectedFiles);
 
     onComplete();
