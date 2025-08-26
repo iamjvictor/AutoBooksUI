@@ -4,12 +4,14 @@
 import React, { useState } from "react";
 import { Check, Clock, CreditCard, QrCode } from "lucide-react";
 import { plans, type Plan } from "@/data/plans";
+import { useRouter } from "next/navigation";
 
 // IMPORTE OS NOVOS COMPONENTES
 import PixPayment from "@/components/Payments/PixPayments";
 import CreditCardForm from "@/components/Payments/CreditCardPayment";
 import PdfUpload from "@/components/pdfUpload";
 import InfoUpload from "@/components/infoUpload";
+import { createClient } from "@/clients/supabaseClient";
 
 // O componente PdfUpload precisa ser movido para seu próprio arquivo também
 // Ex: src/components/onboarding/PdfUpload.tsx
@@ -19,6 +21,9 @@ export default function PlanosPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [currentStep, setCurrentStep] = useState<'plans' | 'payment' | 'pdfUpload' | 'infoUpload'>('plans');
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card' | null>(null);
+
+  const nav = useRouter();
+  const supabase = createClient();
 
   // ... (todas as suas funções handle... continuam aqui, sem alterações)
   const handleSelectPlan = (plan: Plan) => {
@@ -45,8 +50,37 @@ export default function PlanosPage() {
     console.log("pdf enviado! Redirecionando para o dashboard...");
     setCurrentStep('infoUpload');
   };
-  const handleInfoComplete = () => {
+  const handleInfoComplete = async() => {
     console.log("Informações enviadas! Redirecionando para o dashboard...");
+
+    try {
+      // 1. Pega a sessão para se autenticar com o backend
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada.");
+
+      // 2. Chama a API para fazer a ÚLTIMA atualização de status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ nextStep: 'active' }) // O status final!
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao ativar a sua conta.");
+      }
+
+      console.log("Usuário ativado com sucesso! Redirecionando para o dashboard.");
+
+      // 3. Redireciona para o dashboard, finalizando o onboarding.
+      nav.push('/dashboard');
+
+    } catch (error) {
+      console.error("Erro ao ativar o usuário:", error);
+      // Exiba um toast de erro aqui
+    }
     
   };
 

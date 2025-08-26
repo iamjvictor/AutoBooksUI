@@ -26,6 +26,9 @@ export default function LoginPage() {
 
     const email = emailRef.current?.value;
     const password = passwordRef.current?.value;
+    const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Usuário não autenticado.");
+
 
     if (!email || !password) {
       showToast("Por favor, preencha todos os campos.");
@@ -37,13 +40,33 @@ export default function LoginPage() {
         email,
         password
       });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
 
-      if (error) throw error;
-      nav.push("/");
+      if (!response.ok) {
+        throw new Error("Não foi possível carregar os dados do seu perfil.");
+      }
 
-      console.log("Usuário autenticado com sucesso:");
+      // 'profileData' agora é o objeto completo: { id, full_name, status, ... }
+      const profileData = await response.json(); 
+
+      // 3. Extrai o campo 'status' do objeto para a decisão de redirecionamento
+      const { status } = profileData;
+
+      showToast("Login bem-sucedido! Redirecionando...", "success");
+      
+     if (status === 'onboarding_plans') {
+        
+        nav.push('/onboarding/planos');
+      } else {        
+        nav.push('/dashboard');
+      }
+
     } catch (error) {
-      showToast((error as Error).message);
+      // ... (tratamento de erro)
     }
   }
 

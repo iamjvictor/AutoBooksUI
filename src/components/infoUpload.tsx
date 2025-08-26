@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { PlusCircle, Trash2, Edit } from "lucide-react";
 import { type RoomType } from "@/data/rooms";
 import RoomDetailsForm from "./roomDetailsForm"; // Corrigido para PascalCase, o padrão para componentes
+import {createClient} from "@/clients/supabaseClient";
 
 // Valor inicial para um novo quarto, para não começar com campos undefined
 const initialRoomDetails: Omit<RoomType, 'id' | 'name'> = {
@@ -27,6 +28,9 @@ interface RoomTypeManagerProps {
 export default function RoomTypeManager({ onComplete }: RoomTypeManagerProps) {
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [editingRoom, setEditingRoom] = useState<Partial<RoomType> | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const supabase = createClient(); 
 
   // Função para ABRIR O FORMULÁRIO para um novo quarto em branco
   const handleAddNew = () => {
@@ -55,14 +59,46 @@ export default function RoomTypeManager({ onComplete }: RoomTypeManagerProps) {
     setRoomTypes(prev => prev.filter(roomType => roomType.id !== idToRemove));
   };
   
-  const handleFinalSubmit = () => {
+  const handleFinalSubmit = async () => {
     if (roomTypes.length === 0) {
       alert("Adicione pelo menos um tipo de quarto para continuar.");
       return;
     }
-    console.log("Tipos de quarto finalizados:", roomTypes);
-    onComplete(roomTypes);
-  }
+    setIsSubmitting(true);
+
+    try {
+      // 1. Pegar a sessão do usuário logado para autenticação
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Usuário não autenticado.");
+
+      // 2. Enviar os dados para a nossa API Express
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rooms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(roomTypes),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Falha ao salvar os quartos.");
+      }
+
+      const result = await response.json();
+      console.log("Quartos salvos com sucesso!", result.data);
+
+      // 3. APENAS APÓS O SUCESSO, avisa o componente pai que terminou.
+      onComplete(roomTypes);
+
+    } catch (error) {
+      console.error("Erro ao finalizar o cadastro de quartos:", error);
+      alert((error as Error).message); // Use seu Toast aqui
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Se 'editingRoom' tiver dados, mostre o formulário de detalhes
   if (editingRoom) {
