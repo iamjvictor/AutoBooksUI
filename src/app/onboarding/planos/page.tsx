@@ -41,13 +41,65 @@ export default function PlanosPage() {
     setPaymentMethod(null);
   }
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     console.log("Pagamento simulado com sucesso!");
+     try {
+      // 1. Pega a sessão para se autenticar com o backend
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada.");
+
+      // 2. Chama a API para fazer a ÚLTIMA atualização de status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ nextStep: 'onboarding_pdf' }) // O status final!
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao ativar a sua conta.");
+      }
+
+      console.log("Usuário ativado com sucesso! Redirecionando para o dashboard.");
+
+    } catch (error) {
+      console.error("Erro ao ativar o usuário:", error);
+      // Exiba um toast de erro aqui
+    }
+    
     setCurrentStep('pdfUpload');
   };
 
-  const handlePdfComplete = () => {
+  const handlePdfComplete = async () => {
     console.log("pdf enviado! Redirecionando para o dashboard...");
+    try {
+      // 1. Pega a sessão para se autenticar com o backend
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada.");
+
+      // 2. Chama a API para fazer a ÚLTIMA atualização de status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ nextStep: 'onboarding_rooms' }) // O status final!
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao ativar a sua conta.");
+      }
+
+      console.log("Usuário ativado com sucesso! Redirecionando para o dashboard.");
+
+    } catch (error) {
+      console.error("Erro ao ativar o usuário:", error);
+      // Exiba um toast de erro aqui
+    }
+    
     setCurrentStep('infoUpload');
   };
   const handleInfoComplete = async() => {

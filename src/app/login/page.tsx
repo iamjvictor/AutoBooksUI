@@ -41,29 +41,27 @@ export default function LoginPage() {
         password
       });
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
-
+      
       if (!response.ok) {
         throw new Error("Não foi possível carregar os dados do seu perfil.");
       }
 
-      // 'profileData' agora é o objeto completo: { id, full_name, status, ... }
       const profileData = await response.json(); 
 
-      // 3. Extrai o campo 'status' do objeto para a decisão de redirecionamento
-      const { status } = profileData;
+      const status  = profileData.profile.status;
 
-      showToast("Login bem-sucedido! Redirecionando...", "success");
-      
-     if (status === 'onboarding_plans') {
-        
+
+      // 3. Lógica de redirecionamento
+      if (status === 'onboarding_plans') {
+        console.log('DECISÃO: Redirecionando para /onboarding/planos');
         nav.push('/onboarding/planos');
-      } else {        
+      } else {
+        console.log('DECISÃO: Redirecionando para /dashboard');
         nav.push('/dashboard');
       }
+
 
     } catch (error) {
       // ... (tratamento de erro)

@@ -17,6 +17,7 @@ export default function CreditCardForm({ plan, onBack, onPaymentSuccess }: Credi
     e.preventDefault();
     // Aqui você validaria os dados do cartão e chamaria o gateway de pagamento
     // Ao receber a confirmação de sucesso do gateway, chame a função abaixo:
+    
     onPaymentSuccess();
   };
 
