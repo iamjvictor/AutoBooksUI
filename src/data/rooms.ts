@@ -69,5 +69,5 @@ export interface RoomType {
   beds: BedConfiguration[];
   amenities: Amenities;
   dailyRate: number; // Preço da diária em R$
-  photos: File[]; // Usado para gerenciar uploads no lado do cliente
+  photos: string[]; // Usado para gerenciar uploads no lado do cliente
 }

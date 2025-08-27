@@ -6,19 +6,24 @@ import { ArrowLeft, BedDouble, Plus, Trash2, UploadCloud, X } from "lucide-react
 import React, { useState } from "react";
 import Image from "next/image";
 import AmenitiesSelector from "./comodidadesSelector"; 
+import { createClient } from "@/clients/supabaseClient";
+
 interface RoomDetailsFormProps {
-  initialData: Partial<RoomType>;
+  initialData: Partial<Omit<RoomType, 'photos'> & { photos?: (File | string)[] }>;
   onSave: (data: RoomType) => void;
   onCancel: () => void;
 }
 
 export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomDetailsFormProps) {
-    const [details, setDetails] = useState<Partial<RoomType>>(initialData);
+   const [details, setDetails] = useState(initialData);
     const [newBed, setNewBed] = useState<BedConfiguration>({
         id: 0, 
         type: 'casal',
         quantity: 1,
     });
+    const [isSaving, setIsSaving] = useState(false);
+
+    const supabase = createClient(); 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -54,8 +59,9 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
 };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+   if (e.target.files) {
       const newPhotos = Array.from(e.target.files);
+      // Adiciona os novos Files à lista existente
       setDetails(prev => ({ ...prev, photos: [...(prev.photos || []), ...newPhotos] }));
     }
   };
@@ -113,13 +119,53 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
     }));
   };
   
-  const handleSave = () => {
-    if (!details.name || details.name.trim() === "") {
-        alert("Por favor, preencha o Nome do Tipo de Quarto.");
-        return;
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Usuário não autenticado.");
+
+      // 2. A LÓGICA DE SEPARAÇÃO E UPLOAD CONTINUA A MESMA
+      const filesToUpload = details.photos?.filter(p => p instanceof File) as File[] || [];
+      const existingUrls = details.photos?.filter(p => typeof p === 'string') as string[] || [];
+      
+      let newUrls: string[] = [];
+
+      if (filesToUpload.length > 0) {
+        const formData = new FormData();
+        filesToUpload.forEach(file => { formData.append('roomPhotos', file); });
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads/room_photos`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error("Falha ao enviar as fotos.");
+
+        const result = await response.json();
+        newUrls = result.urls;
+          console.log('--- PASSO 1: URLs recebidas do backend de upload ---', newUrls);
+      }
+      
+      
+      // 3. O OBJETO FINAL É CRIADO COM 'photos: string[]'
+      const finalRoomData = {
+        ...details,
+        photos: [...existingUrls, ...newUrls], // O resultado é SEMPRE um array de strings
+      };
+       console.log('--- PASSO 2: Objeto final enviado para o RoomTypeManager ---', finalRoomData);
+
+      // 4. AGORA A TIPAGEM BATE PERFEITAMENTE
+      // 'finalRoomData' agora corresponde à 'RoomType' porque 'photos' é string[]
+      onSave(finalRoomData as RoomType);
+
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setIsSaving(false);
     }
-    onSave(details as RoomType);
-  }
+  };
 
   return (
     <div>
@@ -270,15 +316,23 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
               </div>
            </div>
            {details.photos && details.photos.length > 0 && (
-              <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
-                  {details.photos.map((photo, index) => (
-                      <div key={index} className="relative group">
-                          <Image src={URL.createObjectURL(photo)} alt={`preview ${index}`} width={150} height={150} className="rounded-md object-cover h-24 w-full" />
-                          <button onClick={() => removePhoto(index)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><X className="h-3 w-3"/></button>
-                      </div>
-                  ))}
-              </div>
-           )}
+        <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
+            {details.photos.map((photo, index) => (
+                <div key={index} className="relative group">
+                    <Image 
+                        // Se for um File, cria uma URL de objeto. Se for string, usa a própria URL.
+                        src={photo instanceof File ? URL.createObjectURL(photo) : photo} 
+                        alt={`preview ${index}`} 
+                        width={150} height={150} 
+                        className="rounded-md object-cover h-24 w-full" 
+                    />
+                    <button onClick={() => removePhoto(index)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <X className="h-3 w-3"/>
+                    </button>
+                </div>
+            ))}
+        </div>
+      )}
         </div>
       </div>
 
