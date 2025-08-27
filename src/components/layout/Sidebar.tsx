@@ -4,6 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { LayoutDashboard, User, BarChart3, LogOut, X, Bot } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 
 interface SidebarProps {
@@ -19,6 +20,7 @@ const navItems = [
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
   return (
     <>
       {/* Overlay escuro que aparece atrás do menu */}
@@ -37,7 +39,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-2">
-            <Bot className="h-8 w-8 text-teal-400" />
+            <span className="text-2xl">🛎️</span>
             <span className="text-xl font-bold">AutoBooks</span>
           </div>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700">
@@ -49,12 +51,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <ul className="space-y-2 flex-grow">
             {navItems.map((item) => (
               <li key={item.label}>
-                <Link
+              <Link
                   href={item.href}
+                  onClick={onClose} 
                   className={`flex items-center gap-3 p-3 rounded-md transition-colors ${
-                    item.active
-                      ? 'bg-teal-600 text-white'
-                      : 'hover:bg-gray-700'
+                    // 4. Lógica para destacar o link ativo
+                    pathname === item.href
+                      ? 'bg-teal-600 text-white' // Estilo de ativo
+                      : 'hover:bg-gray-700'      // Estilo normal
                   }`}
                 >
                   <item.icon className="h-5 w-5" />

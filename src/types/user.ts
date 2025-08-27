@@ -21,6 +21,8 @@ export interface UserProfile {
   state: string;
   zip_code: string;
   status: 'active' | 'onboarding_plans' | 'onboarding_pdf' | 'onboarding_rooms';
+
+  email?: string; 
 }
 
 // A estrutura completa que o nosso Contexto vai fornecer
