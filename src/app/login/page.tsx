@@ -49,7 +49,7 @@ export default function LoginPage() {
       }
 
       const profileData = await response.json(); 
-
+      console.log("Dados do perfil:", profileData);
       const status  = profileData.profile.status;
 
 

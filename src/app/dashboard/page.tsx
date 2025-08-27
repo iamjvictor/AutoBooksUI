@@ -1,12 +1,13 @@
-// src/app/dashboard/page.tsx
+// VERSÃO CORRETA DE /app/dashboard/page.tsx
+
+import DashboardClient from './DashboardClient';
+import { UserProvider } from '@/context/UserContext';
 
 export default function DashboardPage() {
+  // Sem hooks aqui! Apenas retornando a estrutura.
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      <p className="mt-2 text-gray-600">
-        Bem-vindo à sua área principal! O conteúdo virá aqui em breve.
-      </p>
-    </div>
+    <UserProvider>
+      <DashboardClient />
+    </UserProvider>
   );
 }
