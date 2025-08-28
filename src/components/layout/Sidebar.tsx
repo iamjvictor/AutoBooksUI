@@ -1,31 +1,39 @@
-// src/components/layout/Sidebar.tsx
 "use client";
 
 import React from 'react';
 import Link from 'next/link';
-import { LayoutDashboard, User, BarChart3, LogOut, X, Bot } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-
+import { LayoutDashboard, User, BarChart3, Bot, X, LogOut } from 'lucide-react';
+import { createClient } from '@/clients/supabaseClient'; // Ajuste o caminho se necessário
+import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-// Itens da navegação para facilitar a manutenção
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, active: true },
-  { href: '/profile', label: 'Perfil', icon: User, active: false },
-  { href: '/crm', label: 'CRM', icon: BarChart3, active: false },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/profile', label: 'Perfil', icon: User },
+  { href: '/crm', label: 'CRM', icon: BarChart3 },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+    onClose(); // Fecha a sidebar após o logout
+  };
+
   return (
     <>
-      {/* Overlay escuro que aparece atrás do menu */}
+      {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 z-40 transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/60 z-40 lg:hidden ${ // Adicionado lg:hidden
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -33,7 +41,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       
       {/* Conteúdo do Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${ // Adicionado flex flex-col e lg:translate-x-0
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -42,23 +50,23 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <span className="text-2xl">🛎️</span>
             <span className="text-xl font-bold">AutoBooks</span>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700">
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700 lg:hidden"> {/* Adicionado lg:hidden */}
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <nav className="flex flex-col h-full">
-          <ul className="space-y-2 flex-grow">
+        {/* O <nav> agora ocupa o espaço restante */}
+        <nav className="flex flex-col flex-grow">
+          <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.label}>
-              <Link
+                <Link
                   href={item.href}
                   onClick={onClose} 
                   className={`flex items-center gap-3 p-3 rounded-md transition-colors ${
-                    // 4. Lógica para destacar o link ativo
                     pathname === item.href
-                      ? 'bg-teal-600 text-white' // Estilo de ativo
-                      : 'hover:bg-gray-700'      // Estilo normal
+                      ? 'bg-teal-600 text-white'
+                      : 'hover:bg-gray-700'
                   }`}
                 >
                   <item.icon className="h-5 w-5" />
@@ -68,8 +76,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             ))}
           </ul>
 
+          {/* ESTA É A PARTE CORRIGIDA */}
           <div className="mt-auto">
-            <button className="flex items-center gap-3 p-3 rounded-md transition-colors hover:bg-gray-700">
+            <button 
+              onClick={handleLogout} // O onClick vai no botão
+              className="w-full flex items-center gap-3 p-3 rounded-md text-gray-300 transition-colors hover:bg-red-500 hover:text-white"
+            >
               <LogOut className="h-5 w-5" />
               <span>Sair</span>
             </button>

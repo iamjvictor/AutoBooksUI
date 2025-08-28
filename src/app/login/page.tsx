@@ -7,27 +7,27 @@ import { useRef } from "react";
 import { useState } from "react";
 import Toast from "@/components/common/Toast";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react"; // Importe um ícone de loading
  
 export default function LoginPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-
+  const [isLoading, setIsLoading] = useState(false);
   const nav = useRouter();
   const supabase = createClient();
 
-  const showToast = (message: string, type: 'success' | 'error' = 'error') => {
-   
+  const showToast = (message: string, type: 'success' | 'error' = 'error') => {   
     setToast({ message, type });
   };
   const doLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true); 
     setToast(null);
 
     const email = emailRef.current?.value;
     const password = passwordRef.current?.value;
-    const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Usuário não autenticado.");
+    
 
 
     if (!email || !password) {
@@ -40,6 +40,8 @@ export default function LoginPage() {
         email,
         password
       });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Usuário não autenticado.");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
@@ -65,6 +67,8 @@ export default function LoginPage() {
 
     } catch (error) {
       // ... (tratamento de erro)
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -129,18 +133,20 @@ export default function LoginPage() {
 
           {/* Link "Esqueceu a senha?" */}
           <div className="text-right">
-            <Link href="/recuperar-senha" className="text-sm text-teal-600 hover:underline">
+            <Link href="/forgot-password" className="text-sm text-teal-600 hover:underline">
               Esqueceu a senha?
             </Link>
           </div>
 
           {/* Botão de Entrar */}
           <div>
-            <button 
+            <button
               type="submit"
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition duration-150 ease-in-out"
+              disabled={isLoading} // Desabilita o botão durante o carregamento
+              className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
             >
-              Entrar
+              {isLoading && <Loader2 className="animate-spin h-5 w-5" />}
+              {isLoading ? 'Entrando...' : 'Entrar'}
             </button>
           </div>
         </form>

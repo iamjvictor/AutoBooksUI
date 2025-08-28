@@ -63,6 +63,40 @@ export default function ProfilePage() {
     setFormData(prev => (prev ? { ...prev, [name]: value } : null));
   };
 
+  const sendResetEmail = async () => {
+    if (!formData) return;
+
+    const { email } = formData;
+
+    if (!email) {
+      alert("Por favor, forneça um endereço de email.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/send-reset-password-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Falha ao enviar email.");
+      }
+
+      alert("Email de redefinição de senha enviado com sucesso!");
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Ocorreu um erro desconhecido.");
+      }
+    }
+  }
+
  const handleSave = async () => {
     if (!formData) return;
     setIsSaving(true);
@@ -120,7 +154,7 @@ export default function ProfilePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="bg-teal-100 p-6 rounded-lg shadow-sm">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
            <div className="w-full flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
                 {/* Lado Esquerdo: Título e Subtítulo */}
@@ -182,6 +216,21 @@ export default function ProfilePage() {
             <ProfileField label="CEP" name="zip_code" value={formData.zip_code || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />
           </dl>
         </div>
+        <div className="flex justify-start items-center gap-4 pt-6 border-t mt-2">
+          {/* Botão de Redefinir Senha (Ação Secundária) */}
+          <button
+            type="button" // Importante ser 'button' para não submeter o formulário
+            onClick={sendResetEmail}
+            className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
+          >
+            Redefinir senha
+          </button>
+
+          
+        </div>
+
+      
+
       </div>
     </div>
   );
