@@ -20,7 +20,7 @@ export interface UserProfile {
   city: string;
   state: string;
   zip_code: string;
-  status: 'active' | 'onboarding_plans' | 'onboarding_pdf' | 'onboarding_rooms';
+  status: 'active' | 'onboarding_plans' | 'onboarding_pdf' | 'onboarding_rooms'| 'activeAndConnected';
 
   email?: string; 
 }

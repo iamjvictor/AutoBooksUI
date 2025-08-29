@@ -37,6 +37,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
+        
       />
       
       {/* Conteúdo do Sidebar */}
