@@ -12,6 +12,8 @@ export default function DashboardClient() {
   const { userData, loading } = useUser();
   const supabase = createClient();
 
+  
+
   // O handler do clique agora é uma função 'async'
   const handleConnectGoogleCalendar = async () => {
     console.log("Iniciando conexão com Google Agenda...");
@@ -19,6 +21,7 @@ export default function DashboardClient() {
     // 1. Pega a sessão do usuário de forma assíncrona
     const { data: { session }, error } = await supabase.auth.getSession();
 
+   
     if (error || !session) {
       console.error('Erro ao buscar a sessão:', error?.message);
       alert('Não foi possível obter sua sessão. Por favor, faça o login novamente.');
@@ -30,12 +33,17 @@ export default function DashboardClient() {
 
     // 2. Constrói a URL de autorização do Google com o JWT no 'state'
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+    const scopes = [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/userinfo.profile',
+    ];
     
     const params = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
       redirect_uri: `http://localhost:4000/api/auth/google/callback`,
       response_type: 'code',
-      scope: 'https://www.googleapis.com/auth/calendar',
+      scope: scopes.join(' '),
       access_type: 'offline',
       prompt: 'consent',
       state: jwt, // Passa o JWT do usuário para o backend
@@ -59,6 +67,10 @@ export default function DashboardClient() {
   const { profile } = userData;
   const isOnboardingComplete = profile.status === 'active';
   const isGoogleAgendaConnected = profile.status === 'activeAndConnected';
+  const hasGoogleIntegration = userData.hasGoogleIntegration;
+  
+
+  // userData.hasGoogleIntegration || false;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
@@ -126,12 +138,12 @@ export default function DashboardClient() {
                 <p className="text-sm text-gray-500 mt-1">Sincronize com sua agenda para reservas.</p>
                 <button 
                   onClick={handleConnectGoogleCalendar} // O onClick chama nossa nova função async
-                  disabled={!isOnboardingComplete} 
+                  disabled={hasGoogleIntegration} 
                   className="mt-4 flex items-center cursor-pointer justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                     <Calendar className="h-5 w-5" />
                     Conectar com Google Agenda
-                    {!isOnboardingComplete && <Lock className="h-4 w-4 ml-2" />}
+                    {hasGoogleIntegration && <Lock className="h-4 w-4 ml-2" />}
                 </button>
             </div>
         </div>

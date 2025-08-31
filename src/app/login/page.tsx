@@ -41,6 +41,10 @@ export default function LoginPage() {
         password
       });
       const { data: { session } } = await supabase.auth.getSession();
+    
+
+    const tokenJWT = session?.access_token;
+    console.log("TOKEN DE ACESSO PARA O POSTMAN:", tokenJWT);
       if (!session) throw new Error("Usuário não autenticado.");
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` },

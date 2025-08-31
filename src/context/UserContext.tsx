@@ -43,7 +43,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Dispara todas as chamadas de API em paralelo para mais performance.
-      const [profileRes, roomsRes, documentsRes] = await Promise.all([
+      const [profileRes, roomsRes, documentsRes, integrationRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` },
         }),
@@ -52,20 +52,25 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }),
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads/getdocuments`, {
           headers: { 'Authorization': `Bearer ${session.access_token}` },
-        })
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google/check`, {
+          headers: { 'Authorization': `Bearer ${session.access_token}` },
+        }),
       ]);
 
       // Verifica se todas as respostas foram bem-sucedidas.
-      if (!profileRes.ok || !roomsRes.ok || !documentsRes.ok) {
+      if (!profileRes.ok || !roomsRes.ok || !documentsRes.ok || !integrationRes.ok) {
         throw new Error(`Falha ao buscar um dos recursos da API.`);
       }
       
       // Extrai o JSON de todas as respostas.
-      const [profileResponse, roomsResponse, documentsResponse] = await Promise.all([
+      const [profileResponse, roomsResponse, documentsResponse, integrationData] = await Promise.all([
         profileRes.json(),
         roomsRes.json(),
-        documentsRes.json()
+        documentsRes.json(),
+        integrationRes.json()
       ]);
+      console.log("Dados de Integração com Google:", integrationData);
 
       // Combina o perfil vindo da sua API com o e-mail vindo da sessão do Supabase.
       const combinedProfile = {
@@ -78,6 +83,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         profile: combinedProfile,
         rooms: roomsResponse.data || [],
         documents: documentsResponse.data || [],
+        hasGoogleIntegration: integrationData.hasGoogleIntegration ,
       });
       
     } catch (error) {

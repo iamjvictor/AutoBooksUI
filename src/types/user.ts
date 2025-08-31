@@ -30,4 +30,5 @@ export interface UserData {
   profile: UserProfile;
   rooms: RoomType[];
   documents: UserDocument[];
+  hasGoogleIntegration: boolean;
 }
