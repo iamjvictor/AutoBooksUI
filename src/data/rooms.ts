@@ -68,6 +68,7 @@ export interface RoomType {
   bathroom: 'privativo' | 'compartilhado';
   beds: BedConfiguration[];
   amenities: Amenities;
-  dailyRate: number; // Preço da diária em R$
-  photos: string[]; // Usado para gerenciar uploads no lado do cliente
+  daily_rate: number; // Preço da diária em R$
+  photos: string[];
+  total_quantity: number;  // Usado para gerenciar uploads no lado do cliente
 }

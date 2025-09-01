@@ -4,7 +4,7 @@
 import { type RoomType, type Amenities, BedConfiguration } from "@/data/rooms"; 
 import { ArrowLeft, BedDouble, Plus, Trash2, UploadCloud, X } from "lucide-react";
 import React, { useState } from "react";
-import Image from "next/image";
+
 import AmenitiesSelector from "./comodidadesSelector"; 
 import { createClient } from "@/clients/supabaseClient";
 
@@ -30,9 +30,11 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
     
     let processedValue: string | number = value;
     if (type === 'number') {
+      // Garante que o valor seja um número, ou 0 se o campo for limpo
       processedValue = value === '' ? 0 : parseFloat(value);
     }
     
+    // Atualiza o estado 'details' usando o 'name' do input como chave
     setDetails(prev => ({ ...prev, [name]: processedValue }));
   };
 
@@ -118,7 +120,8 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
       beds: prev.beds?.filter(bed => bed.id !== idToRemove)
     }));
   };
-  
+
+ 
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -208,8 +211,21 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
             <input type="number" id="capacity" name="capacity" placeholder="Ex: 2" className="mt-1 block w-full input-style" value={details.capacity || ''} onChange={handleInputChange} />
           </div>
           <div>
-            <label htmlFor="dailyRate" className="block text-sm font-medium text-gray-700">Valor da Diária (R$)</label>
-            <input type="number" id="dailyRate" name="dailyRate" placeholder="Ex: 250.00" className="mt-1 block w-full input-style" value={details.dailyRate || ''} onChange={handleInputChange} />
+            <label htmlFor="totalQuantity" className="block text-sm font-medium text-gray-700">Quantidade Disponível</label>
+            <input 
+              type="number" 
+              id="total_quantity"
+              name="total_quantity"
+              placeholder="Ex: 5" 
+              className="mt-1 block w-full input-style"
+              value={details.total_quantity || ''}            
+              onChange={handleInputChange}
+              min="1"
+            />
+          </div>
+          <div>
+            <label htmlFor="daily_rate" className="block text-sm font-medium text-gray-700">Valor da Diária (R$)</label>
+            <input type="number" id="daily_rate" name="daily_rate" placeholder="Ex: 250.00" className="mt-1 block w-full input-style" value={details.daily_rate || ''} onChange={handleInputChange} />
           </div>
         </div>
                 {/* --- SEÇÃO DE CONFIGURAÇÃO DE CAMAS --- */}
@@ -319,7 +335,7 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
         <div className="mt-4 grid grid-cols-3 sm:grid-cols-5 gap-4">
             {details.photos.map((photo, index) => (
                 <div key={index} className="relative group">
-                    <Image 
+                    <img 
                         // Se for um File, cria uma URL de objeto. Se for string, usa a própria URL.
                         src={photo instanceof File ? URL.createObjectURL(photo) : photo} 
                         alt={`preview ${index}`} 

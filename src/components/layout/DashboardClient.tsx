@@ -6,11 +6,14 @@ import { AlertTriangle, DollarSign, MessageCircle, CalendarDays, Lock, Phone, Ca
 import Link from 'next/link';
 import { createClient } from '@/clients/supabaseClient';
 import { useUser } from '@/context/UserContext';
+import { useState } from 'react';
+import RoomTypeManager from '../infoUpload';
 
 // A função do componente agora é síncrona (sem 'async')
 export default function DashboardClient() {
   const { userData, loading } = useUser();
   const supabase = createClient();
+  const [view, setView] = useState<'dashboard' | 'manage_rooms'>('dashboard');
 
   
 
@@ -54,6 +57,12 @@ export default function DashboardClient() {
     window.location.href = `${googleAuthUrl}?${params.toString()}`;
   };
 
+  const handleReturnToDashboard = () => {
+    setView('dashboard');
+    // Opcional: recarregar os dados se houveram mudanças
+    window.location.reload(); 
+  };
+
 
   // O resto da lógica síncrona do componente continua aqui
   if (loading) {
@@ -71,6 +80,17 @@ export default function DashboardClient() {
   
 
   // userData.hasGoogleIntegration || false;
+
+  if (view === 'manage_rooms') {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="max-w-4xl mx-auto">
+            {/* O onComplete agora apenas te leva de volta para a tela principal */}
+            <RoomTypeManager onComplete={handleReturnToDashboard} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
@@ -153,9 +173,12 @@ export default function DashboardClient() {
              <div className="bg-white p-6 rounded-lg shadow-sm"> 
                 <h3 className="text-lg font-semibold text-gray-900">Gerenciar Acomodações</h3> 
                 <p className="text-sm text-gray-500 mt-1">Configure e gerencie seus quartos e acomodações.</p> 
-                <Link href="/onboarding/rooms" className="mt-4 block text-center w-full px-4 py-2 bg-white text-teal-700 border border-teal-600 rounded-md font-semibold hover:bg-teal-50"> 
+                <button 
+                  onClick={() => setView('manage_rooms')} // <-- Muda o estado para exibir o gerenciador
+                  className="mt-4 block text-center w-full px-4 py-2 bg-white text-teal-700 border border-teal-600 rounded-md font-semibold hover:bg-teal-50"
+                >
                     Editar Quartos 
-                </Link> 
+                </button>
             </div> 
             <div className="bg-white p-6 rounded-lg shadow-sm"> 
                 <h3 className="text-lg font-semibold text-gray-900">Base de Conhecimento</h3> 
