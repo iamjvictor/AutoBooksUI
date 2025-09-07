@@ -8,13 +8,16 @@ import { createClient } from '@/clients/supabaseClient';
 import { useUser } from '@/context/UserContext';
 import { useState } from 'react';
 import RoomTypeManager from '../infoUpload';
+import axios from 'axios';
 
 // A função do componente agora é síncrona (sem 'async')
 export default function DashboardClient() {
   const { userData, loading } = useUser();
   const supabase = createClient();
   const [view, setView] = useState<'dashboard' | 'manage_rooms'>('dashboard');
-
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [isConnectingWhatsapp, setIsConnectingWhatsapp] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'loading_qr' | 'showing_qr' | 'connected' | 'error'>('idle');
   
 
   // O handler do clique agora é uma função 'async'
@@ -62,7 +65,40 @@ export default function DashboardClient() {
     // Opcional: recarregar os dados se houveram mudanças
     window.location.reload(); 
   };
+  
 
+  const handleConnectWhatsapp = async () => {
+    setIsConnectingWhatsapp(true);
+    setQrCode(null);
+    try {
+      if (!userData || !userData.profile) {
+        alert('Dados do usuário não encontrados. Faça login novamente.');
+        setIsConnectingWhatsapp(false);
+        return;
+      }
+      // Monte o deviceConfig conforme necessário (ajuste os campos conforme seu backend espera)
+      const deviceConfig = {
+        id: `device-${userData.profile.whatsapp_number.replace(/\D/g, '')}`,
+        name: `Dispositivo ${userData.profile.business_name || userData.profile.full_name}`,
+        whatsappNumber: userData.profile.whatsapp_number.replace(/\D/g, ''),
+        user_id: userData.profile.id,
+      };
+      const { data } = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/devices/connect`,
+        deviceConfig
+      );
+      if (data.result && data.result.startsWith('data:image')) {
+        setQrCode(data.result);
+      } else if (data.result === 'CONNECTED') {
+        setQrCode(null);
+        alert('WhatsApp conectado com sucesso!');
+      }
+    } catch (err: any) {
+      alert('Erro ao conectar WhatsApp: ' + (err?.response?.data?.error || err.message));
+    } finally {
+      setIsConnectingWhatsapp(false);
+    }
+  };
 
   // O resto da lógica síncrona do componente continua aqui
   if (loading) {
@@ -147,11 +183,21 @@ export default function DashboardClient() {
             <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900">Conecte seus Canais</h3>
                 <p className="text-sm text-gray-500 mt-1">Conecte para automatizar o atendimento.</p>
-                <button disabled={!isGoogleAgendaConnected} className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed">
+                <button
+                  onClick={handleConnectWhatsapp}
+                  disabled={!isGoogleAgendaConnected || isConnectingWhatsapp}
+                  className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
                     <Phone className="h-5 w-5" />
-                    Conectar WhatsApp
+                    {isConnectingWhatsapp ? 'Conectando...' : 'Conectar WhatsApp'}
                     {!isGoogleAgendaConnected && <Lock className="h-4 w-4 ml-2" />}
                 </button>
+                {qrCode && (
+                  <div className="mt-4 flex flex-col items-center">
+                    <span className="mb-2 text-sm text-gray-700">Escaneie o QR Code abaixo no seu WhatsApp:</span>
+                    <img src={qrCode} alt="QR Code WhatsApp" className="w-48 h-48" />
+                  </div>
+                )}
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900">Integre sua Agenda</h3>

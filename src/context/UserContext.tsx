@@ -99,13 +99,37 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     getFullUserData();
   }, [getFullUserData]);
 
-  // 5. O valor fornecido pelo contexto é memorizado com `useMemo`.
-  // Ele inclui os dados, o estado de loading e a função para recarregar os dados.
-  const value = useMemo(() => ({ 
+  // --- A MUDANÇA ESTÁ AQUI ---
+  // useEffect para OUVIR as mudanças de autenticação (login/logout)
+  useEffect(() => {
+    // onAuthStateChange retorna um objeto com uma função 'unsubscribe'
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log(`UserContext: Evento de autenticação detectado - ${event}`);
+        if (event === 'SIGNED_IN') {
+          // Se um novo login aconteceu, buscamos os dados novamente.
+          console.log("Usuário logado, buscando dados...");
+          getFullUserData();
+        } else if (event === 'SIGNED_OUT') {
+          // Se o usuário fez logout, limpa os dados do nosso contexto.
+          console.log("Usuário deslogado, limpando dados.");
+          setUserData(null);
+        }
+      }
+    );
+
+    // Função de limpeza: remove o "ouvinte" quando o componente é desmontado
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, getFullUserData]); // Adicionamos as dependências corretas
+
+  const value = { 
     userData, 
     loading,
     refetchUserData: getFullUserData 
-  }), [userData, loading, getFullUserData]);
+  };
+  
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

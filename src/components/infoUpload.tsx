@@ -96,8 +96,12 @@ export default function RoomTypeManager({ onComplete }: RoomTypeManagerProps) {
         url += `/${roomData.id}`;
         method = 'PUT';
       }
+
+      console.log('Dados do quarto a serem salvos:', roomData);
       
       const body = isNewRoom ? [roomData] : roomData;
+
+      console.log('Enviando para a API:', { body });
 
       response = await fetch(url, {
         method: method,

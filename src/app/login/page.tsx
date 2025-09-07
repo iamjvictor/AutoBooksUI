@@ -27,25 +27,36 @@ export default function LoginPage() {
 
     const email = emailRef.current?.value;
     const password = passwordRef.current?.value;
-    
-
 
     if (!email || !password) {
       showToast("Por favor, preencha todos os campos.");
+      setIsLoading(false);
       return;
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // 1. Tenta fazer o login
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-      const { data: { session } } = await supabase.auth.getSession();
-    
 
-    const tokenJWT = session?.access_token;
-    console.log("TOKEN DE ACESSO PARA O POSTMAN:", tokenJWT);
-      if (!session) throw new Error("Usuário não autenticado.");
+      // 2. A VERIFICAÇÃO CRUCIAL QUE FALTAVA
+      // Se o Supabase retornou um erro (senha errada, usuário não existe),
+      // nós lançamos uma exceção e paramos o fluxo aqui.
+      if (signInError) {
+        throw new Error("Email ou senha inválidos.");
+      }
+      
+      // 3. Se não houve erro, a sessão no 'signInData' é a correta e nova
+      const session = signInData.session;
+      if (!session) {
+          throw new Error("Não foi possível estabelecer uma sessão.");
+      }
+
+      console.log("TOKEN DE ACESSO PARA O POSTMAN:", session.access_token);
+      
+      // 4. Continua o fluxo com a sessão garantida
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/profile`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
@@ -55,26 +66,24 @@ export default function LoginPage() {
       }
 
       const profileData = await response.json(); 
-      console.log("Dados do perfil:", profileData);
-      const status  = profileData.profile.status;
+      const { status } = profileData.profile;
 
-
-      // 3. Lógica de redirecionamento
+      // 5. Lógica de redirecionamento
       if (status === 'onboarding_plans') {
-        console.log('DECISÃO: Redirecionando para /onboarding/planos');
         nav.push('/onboarding/planos');
       } else {
-        console.log('DECISÃO: Redirecionando para /dashboard');
+        nav.refresh();
         nav.push('/dashboard');
+         // Atualiza os dados do dashboard
       }
 
-
     } catch (error) {
-      // ... (tratamento de erro)
+      console.error("Erro no login:", error);
+      showToast((error as Error).message);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-teal-600">

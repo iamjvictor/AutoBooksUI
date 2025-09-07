@@ -6,6 +6,9 @@ import { createClient } from "@/clients/supabaseClient";
 import { User, Building, Phone, MapPin, Loader2, Pencil, Save, X } from "lucide-react";
 import Link from "next/link";
 import { UserProfile } from "@/types/user";
+import Toast from "@/components/common/Toast";
+import { E164Number } from "libphonenumber-js/core";
+import PhoneInput from 'react-phone-number-input';
 
 // PASSO 1: O componente ProfileField foi movido para FORA do ProfilePage.
 // Agora ele é um componente independente e estável.
@@ -51,6 +54,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [supabase] = useState(() => createClient());
+   const [whatsappNumber, setWhatsappNumber] = useState<E164Number | undefined>();
 
   useEffect(() => {
     if (userData?.profile) {
@@ -99,6 +103,15 @@ export default function ProfilePage() {
 
  const handleSave = async () => {
     if (!formData) return;
+
+    // whatsapp sem o +
+    const whatsappNumberWithoutPlus = whatsappNumber?.replace(/^\+/, '');
+
+    const dataToSend = {
+        ...formData, // seus outros dados do formulário
+        whatsapp_number: whatsappNumberWithoutPlus,
+    };
+    console.log("Dados a serem enviados para o backend:", dataToSend);
     setIsSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -112,7 +125,7 @@ export default function ProfilePage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
@@ -209,7 +222,25 @@ export default function ProfilePage() {
             {/* PASSO 2: Agora passamos as props 'isEditing' e 'handleChange' para cada ProfileField */}
             <ProfileField label="Nome do Responsável" name="full_name" value={formData.full_name || ''} icon={User} isEditing={isEditing} handleChange={handleChange} />
             <ProfileField label="Nome do Estabelecimento" name="business_name" value={formData.business_name || ''} icon={Building} isEditing={isEditing} handleChange={handleChange} />
-            <ProfileField label="WhatsApp" name="whatsapp_number" value={formData.whatsapp_number || ''} icon={Phone} isEditing={isEditing} handleChange={handleChange} />
+            {isEditing ? (
+                <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center">
+                    <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                        <Phone size={16}/> WhatsApp
+                    </dt>
+                    <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <PhoneInput
+                            international
+                            defaultCountry="BR"
+                            value={whatsappNumber}
+                            onChange={setWhatsappNumber}
+                            className="w-full input-style"
+                        />
+                    </dd>
+                </div>
+            ) : (
+                <ProfileField label="WhatsApp" name="whatsapp_number" value={formData.whatsapp_number || ''} icon={Phone} isEditing={isEditing} handleChange={handleChange} />
+            )}
+          
             <ProfileField label="Endereço" name="address" value={formData.address || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />
             <ProfileField label="Cidade" name="city" value={formData.city || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />
             <ProfileField label="Estado" name="state" value={formData.state || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />

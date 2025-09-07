@@ -5,8 +5,11 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/clients/supabaseClient";
-
+import * as countryCodes from "country-codes-list";
+import 'react-phone-number-input/style.css'
+import PhoneInput from 'react-phone-number-input';
 import Toast from "@/components/common/Toast";
+import { E164Number } from "libphonenumber-js/core";
 
 
 
@@ -16,6 +19,7 @@ const estadosBrasileiros = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
   "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
 ];
+
 
   const [formData, setFormData] = useState({
     name: "",
@@ -35,9 +39,9 @@ const estadosBrasileiros = [
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
   const nav = useRouter();
   const supabase = createClient();
+  const [whatsappNumber, setWhatsappNumber] = useState<E164Number | undefined>();
 
   const showToast = (message: string, type: 'success' | 'error' = 'error') => {
     console.log('--- CHAMANDO showToast ---');
@@ -90,16 +94,23 @@ const estadosBrasileiros = [
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setToast(null);
+     
+    // O 'whatsappNumber' já estará no formato internacional completo, ex: "+5521999998888"
+    const dataToSend = {
+        ...formData, // seus outros dados do formulário
+        whatsappNumber: whatsappNumber,
+    };
+    console.log("Dados a serem enviados para o backend:", dataToSend);
     
     
-
+    
     setIsSubmitting(true);   
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(dataToSend),
       });
       
       const responseData = await response.json();
@@ -181,8 +192,18 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
           <div>
             <label htmlFor="whatsappNumber" className="block text-sm font-medium text-gray-700">Número do WhatsApp</label>
-            <input type="tel" id="whatsappNumber" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleChange} placeholder="(XX) 9XXXX-XXXX"  className="mt-1 block w-full input-style" />
+            <PhoneInput
+              id="whatsappNumber"
+              international
+              defaultCountry="BR"
+              value={whatsappNumber}
+              onChange={setWhatsappNumber}
+              className="mt-1 block w-full input-style"
+              // Para customizar o input interno, você pode precisar de CSS global:
+              // .PhoneInputInput { @apply input-style; }
+            />
           </div>
+   
           <div>
             <label htmlFor="address" className="block text-sm font-medium text-gray-700">Endereço</label>
             <input type="text" id="address" name="address" value={formData.businessLocation.address} onChange={handleChange} placeholder="Rua, Número, Bairro" className="mt-1 block w-full input-style" />

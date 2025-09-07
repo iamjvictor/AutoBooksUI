@@ -24,6 +24,9 @@ export default function RoomDetailsForm({ initialData, onSave, onCancel }: RoomD
     const [isSaving, setIsSaving] = useState(false);
 
     const supabase = createClient(); 
+    console.log('--- initialData recebido ---', initialData);
+    console.log('--- Estado atual do formulário ---', details);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
