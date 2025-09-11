@@ -1,14 +1,19 @@
-// src/app/dashboard/DashboardClient.tsx 
+// src/app/dashboard/DashboardClient.tsx
 "use client";
 
 import React from 'react';
-import { AlertTriangle, DollarSign, MessageCircle, CalendarDays, Lock, Phone, Calendar } from 'lucide-react';
+import { AlertTriangle, DollarSign, MessageCircle, CalendarDays, Lock, Phone, Calendar, Loader2, EyeOff, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { createClient } from '@/clients/supabaseClient';
 import { useUser } from '@/context/UserContext';
 import { useState } from 'react';
 import RoomTypeManager from '../infoUpload';
 import axios from 'axios';
+
+interface Balance {
+  amount: number;
+  currency: string;
+}
 
 // A função do componente agora é síncrona (sem 'async')
 export default function DashboardClient() {
@@ -20,6 +25,60 @@ export default function DashboardClient() {
   const [status, setStatus] = useState<'idle' | 'loading_qr' | 'showing_qr' | 'connected' | 'error'>('idle');
   const [isConnectingStripe, setIsConnectingStripe] = useState(false);
   const [stripeError, setStripeError] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [pendingBalance, setPendingBalance] = useState<number | null>(null);
+     // Armazena o saldo buscado
+  const [isVisible, setIsVisible] = useState(false);   // Controla se o saldo é visível
+  const [loading2, setLoading] = useState(false);       // Controla o estado de carregamento
+  const [error, setError] = useState<string | null>(null);            // Armazena mensagens de erro
+
+  // --- FUNÇÃO PARA BUSCAR E/OU REVELAR O SALDO ---
+  const handleToggleVisibility = async () => {
+    // Se o saldo já foi buscado, apenas alterna a visibilidade
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Sessão atual:', session?.access_token);
+    if (balance) {
+      setIsVisible(!isVisible);
+      return;
+    }
+
+    if (!session) {
+      setError('Sessão não encontrada. Por favor, faça login novamente.');
+      setLoading(false);
+      setIsVisible(!isVisible);
+      return;
+    }
+
+      // Se é a primeira vez, busca o saldo na API
+      setLoading(true);
+      setError(null);
+      setIsVisible(true); // Mostra o loader no lugar do saldo
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/balance`, {
+      headers: {
+        // O padrão é 'Bearer ' seguido do token
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+    });
+      const data = await response.json();
+      console.log('Resposta da API de saldo:', data);
+
+      if (response.status !== 200) {
+        throw new Error(data.error || 'Não foi possível buscar o saldo.');
+      }
+      
+      setBalance(data.available.amount);
+      setPendingBalance(data.pending.amount);
+
+    } catch (err) {
+      setError((err as Error).message);
+      setIsVisible(false); // Esconde o saldo em caso de erro
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   // O handler do clique agora é uma função 'async'
   const handleConnectGoogleCalendar = async () => {
@@ -121,6 +180,14 @@ export default function DashboardClient() {
       alert('Erro ao conectar com o Stripe: ' + (err?.response?.data?.error || err.message));
     }}
 
+  const formatCurrency = (amount: number, currency: any) => {
+  if (typeof amount !== 'number' || !currency) return 'R$ --,--';
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: currency,
+  }).format(amount / 100);
+};
+
   // O resto da lógica síncrona do componente continua aqui
   if (loading) {
     return <div>Carregando...</div>;
@@ -136,7 +203,41 @@ export default function DashboardClient() {
   const isGoogleAgendaConnected = profile.status === 'activeAndConnected';
   const hasGoogleIntegration = userData.hasGoogleIntegration;
   const isStripeReady = !!profile.stripe_id; // Simples verificação de Stripe
-  
+
+  const renderAvailableBalance = () => {
+    if (!isVisible) {
+      return <span className="text-3xl font-bold text-gray-400 tracking-widest">••••••</span>;
+    }
+    if (loading2) {
+      return <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />;
+    }
+    if (error) {
+      return <span className="text-lg font-semibold text-red-500">Erro!</span>;
+    }
+   
+    return (
+      <span className="text-3xl font-bold text-teal-900"> 
+        {formatCurrency(balance || 0, 'BRL')} 
+      </span>
+    );
+  };
+  const renderPendingBalance = () => {
+    if (!isVisible) {
+      return <span className="text-3xl font-bold text-gray-400 tracking-widest">••••••</span>;
+    }
+    if (loading2) {
+      return <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />;
+    }
+    if (error) {
+      return <span className="text-lg font-semibold text-red-500">Erro!</span>;
+    }
+    
+    return (
+      <span className="text-3xl font-bold text-teal-900"> 
+        {formatCurrency(pendingBalance || 0, 'BRL')} 
+      </span>
+    );
+  };
 
   // userData.hasGoogleIntegration || false;
 
@@ -201,20 +302,37 @@ export default function DashboardClient() {
           {/* Cards de KPI são exibidos apenas se o Stripe estiver pronto */}
           {isStripeReady && (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="bg-white p-6 rounded-lg shadow-sm"> 
-                 <div className="flex items-center justify-between"> 
-                   <p className="text-md font-extrabold text-black">Saldo (Stripe)</p> 
-                   <DollarSign className="h-6 w-6 text-teal-400" /> 
-                 </div> 
-                 <p className="mt-2 text-3xl font-bold text-teal-900">R$ 0,00</p> 
-               </div> 
-               <div className="bg-white p-6 rounded-lg shadow-sm"> 
-                 <div className="flex items-center justify-between"> 
-                   <p className="text-md font-extrabold text-black">Conversas no Mês</p> 
-                   <MessageCircle className="h-6 w-6 text-teal-400" /> 
-                 </div> 
-                 <p className="mt-2 text-3xl font-bold text-teal-900">0</p> 
-               </div> 
+             <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-md font-extrabold text-black">Saldo Disponível</p>
+                <button onClick={handleToggleVisibility} className="text-gray-500 hover:text-teal-600 transition">
+                  {isVisible ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+                </button>
+              </div>
+              
+              <div className="mt-2 h-10 flex items-center">
+                {renderAvailableBalance()}
+              </div>
+
+              {/* Exibe a mensagem de erro detalhada abaixo do valor */}
+              {error && !loading && (
+                  <p className="text-xs text-red-600 mt-1">{error}</p>
+              )}
+            </div>
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-md font-extrabold text-black">Saldo Pendente</p>
+              </div>
+              
+              <div className="mt-2 h-10 flex items-center">
+                {renderPendingBalance()}
+              </div>
+
+              {/* Exibe a mensagem de erro detalhada abaixo do valor */}
+              {error && !loading && (
+                  <p className="text-xs text-red-600 mt-1">{error}</p>
+              )}
+            </div>
                <div className="bg-white p-6 rounded-lg shadow-sm"> 
                  <div className="flex items-center justify-between"> 
                    <p className="text-md font-extrabold text-black">Reservas no Mês</p> 
