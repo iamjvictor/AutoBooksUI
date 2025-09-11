@@ -18,7 +18,8 @@ export default function DashboardClient() {
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isConnectingWhatsapp, setIsConnectingWhatsapp] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading_qr' | 'showing_qr' | 'connected' | 'error'>('idle');
-  
+  const [isConnectingStripe, setIsConnectingStripe] = useState(false);
+  const [stripeError, setStripeError] = useState<string | null>(null);
 
   // O handler do clique agora é uma função 'async'
   const handleConnectGoogleCalendar = async () => {
@@ -99,6 +100,26 @@ export default function DashboardClient() {
       setIsConnectingWhatsapp(false);
     }
   };
+  const handleConnectStripe = async () => {
+    try {
+      if (!userData || !userData.profile) {
+        alert('Dados do usuário não encontrados. Faça login novamente.');
+        return;
+      }
+      // Chama o endpoint do backend para criar a conta de onboarding
+      const { data } = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/stripe/create-onboarding`,
+        { userId: userData.profile.id }
+      );
+      if (data.url) {
+        // Redireciona o usuário para a URL de onboarding do Stripe
+        window.location.href = data.url;
+      } else {
+        alert('Erro ao iniciar o processo de onboarding do Stripe.');
+      }
+    } catch (err: any) {
+      alert('Erro ao conectar com o Stripe: ' + (err?.response?.data?.error || err.message));
+    }}
 
   // O resto da lógica síncrona do componente continua aqui
   if (loading) {
@@ -108,11 +129,13 @@ export default function DashboardClient() {
   if (!userData) {
     return <div>Dados do usuário não encontrados</div>;
   }
+  
 
   const { profile } = userData;
   const isOnboardingComplete = profile.status === 'active';
   const isGoogleAgendaConnected = profile.status === 'activeAndConnected';
   const hasGoogleIntegration = userData.hasGoogleIntegration;
+  const isStripeReady = !!profile.stripe_id; // Simples verificação de Stripe
   
 
   // userData.hasGoogleIntegration || false;
@@ -153,29 +176,54 @@ export default function DashboardClient() {
           </div>
         )}
 
-        {/* --- CARDS DE KPI (MÉTRICAS) --- */}
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-           <div className="bg-white p-6 rounded-lg shadow-sm"> 
-             <div className="flex items-center justify-between"> 
-               <p className="text-md font-extrabold text-black">Saldo (Stripe)</p> 
-               <DollarSign className="h-6 w-6 text-teal-400" /> 
-             </div> 
-             <p className="mt-2 text-3xl font-bold text-teal-900">R$ 0,00</p> 
-           </div> 
-           <div className="bg-white p-6 rounded-lg shadow-sm"> 
-             <div className="flex items-center justify-between"> 
-               <p className="text-md font-extrabold text-black">Conversas no Mês</p> 
-               <MessageCircle className="h-6 w-6 text-teal-400" /> 
-             </div> 
-             <p className="mt-2 text-3xl font-bold text-teal-900">0</p> 
-           </div> 
-           <div className="bg-white p-6 rounded-lg shadow-sm"> 
-             <div className="flex items-center justify-between"> 
-               <p className="text-md font-extrabold text-black">Reservas no Mês</p> 
-               <CalendarDays className="h-6 w-6 text-teal-400" /> 
-             </div> 
-             <p className="mt-2 text-3xl font-bold text-teal-900">0</p> 
-           </div> 
+    {/* --- SEÇÃO DE MÉTRICAS E ONBOARDING DO STRIPE --- */}
+        <div className="mt-8">
+          {/* BLOCO DE AÇÃO PARA ATIVAR PAGAMENTOS (NOVO DESIGN) */}
+          {!isStripeReady && (
+            <div className="mb-8 rounded-lg bg-slate-100 p-8 text-center">
+              <h2 className="text-2xl font-bold text-slate-800">Ative seus pagamentos</h2>
+              <p className="mt-2 max-w-md mx-auto text-slate-600">
+                Conecte sua conta Stripe para visualizar suas métricas financeiras e começar a receber pagamentos de reservas.
+              </p>
+              <div className="mt-6">
+                <button
+                  onClick={handleConnectStripe}
+                  disabled={isConnectingStripe}
+                  className="rounded-md bg-teal-600 px-8 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:bg-gray-400"
+                >
+                  {isConnectingStripe ? 'Aguarde...' : 'Ativar Pagamentos'}
+                </button>
+                {stripeError && <p className="mt-2 text-sm text-red-500">{stripeError}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Cards de KPI são exibidos apenas se o Stripe estiver pronto */}
+          {isStripeReady && (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="bg-white p-6 rounded-lg shadow-sm"> 
+                 <div className="flex items-center justify-between"> 
+                   <p className="text-md font-extrabold text-black">Saldo (Stripe)</p> 
+                   <DollarSign className="h-6 w-6 text-teal-400" /> 
+                 </div> 
+                 <p className="mt-2 text-3xl font-bold text-teal-900">R$ 0,00</p> 
+               </div> 
+               <div className="bg-white p-6 rounded-lg shadow-sm"> 
+                 <div className="flex items-center justify-between"> 
+                   <p className="text-md font-extrabold text-black">Conversas no Mês</p> 
+                   <MessageCircle className="h-6 w-6 text-teal-400" /> 
+                 </div> 
+                 <p className="mt-2 text-3xl font-bold text-teal-900">0</p> 
+               </div> 
+               <div className="bg-white p-6 rounded-lg shadow-sm"> 
+                 <div className="flex items-center justify-between"> 
+                   <p className="text-md font-extrabold text-black">Reservas no Mês</p> 
+                   <CalendarDays className="h-6 w-6 text-teal-400" /> 
+                 </div> 
+                 <p className="mt-2 text-3xl font-bold text-teal-900">0</p> 
+               </div>
+            </div>
+          )}
         </div>
          
         {/* --- CARDS DE AÇÕES PRINCIPAIS --- */}
@@ -237,4 +285,5 @@ export default function DashboardClient() {
       </div>
     </div>
   );
+ 
 }

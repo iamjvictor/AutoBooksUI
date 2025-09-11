@@ -20,8 +20,8 @@ export interface UserProfile {
   city: string;
   state: string;
   zip_code: string;
-  status: 'active' | 'onboarding_plans' | 'onboarding_pdf' | 'onboarding_rooms'| 'activeAndConnected';
-
+  status: 'active' | 'onboarding_plans' | 'onboarding_pdf' | 'onboarding_rooms'| 'activeAndConnected'| 'readyToUse';
+  stripe_id: string | null;
   email?: string; 
 }
 
