@@ -1,7 +1,7 @@
 // src/components/onboarding/PdfUpload.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check,UploadCloud, FileText, X } from "lucide-react";
 import { createClient } from "@/clients/supabaseClient";
 
@@ -11,12 +11,48 @@ interface PdfUploadProps {
   onComplete: () => void;
 }
 
+interface UploadedFile {
+  id: number;
+  name: string;
+  file_name: string;
+  storage_path: string;
+  created_at: string;
+  user_id: string;
+}
+
 const MAX_FILES = 3;
 
 export default function PdfUpload({ onComplete }: PdfUploadProps) {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<(File | UploadedFile)[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    console.log(selectedFiles)
+      async function fetchPdfs() {
+        setIsLoading(true);
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) throw new Error("Usuário não autenticado.");
+  
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads/getdocuments`, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` },
+          });
+  
+          if (!response.ok) throw new Error("Falha ao buscar os quartos cadastrados.");
+          
+          const result = await response.json()
+          console.log(result.data);
+          setSelectedFiles(result.data || []);
+        } catch (error) {
+          console.error("Erro ao carregar quartos:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      fetchPdfs();
+    }, [supabase]); 
 
   const handleFiles = (files: FileList) => {
     const newFiles = Array.from(files).filter(file => file.type === 'application/pdf');
@@ -62,8 +98,59 @@ export default function PdfUpload({ onComplete }: PdfUploadProps) {
     }
   };
 
-  const handleRemoveFile = (indexToRemove: number) => {
-    setSelectedFiles(prevFiles => prevFiles.filter((_, index) => index !== indexToRemove));
+  const handleRemoveFile = async (indexToRemove: number) => {
+    const fileToRemove = selectedFiles[indexToRemove];
+    console.log("🗑️ [REMOVER ARQUIVO] Arquivo selecionado:", fileToRemove);
+    
+    // Verificar se é um arquivo enviado (UploadedFile) com ID
+    if (!('id' in fileToRemove) || !fileToRemove.id) {
+      console.error("❌ [ERRO] Arquivo inválido ou ID do arquivo não encontrado.");
+      alert("Erro: Arquivo inválido ou ID não encontrado.");
+      return;
+    }
+
+    const fileId = fileToRemove.id;
+    const fileName = fileToRemove.file_name;
+    console.log(`🗑️ [REMOVER ARQUIVO] ID: ${fileId}, Nome: ${fileName}`);
+
+    // Remoção direta sem confirmação
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Usuário não autenticado.");        
+      }
+
+      console.log(`🔄 [REMOVER ARQUIVO] Enviando requisição DELETE para: ${process.env.NEXT_PUBLIC_API_URL}/uploads/document/${fileId}`);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads/document/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Falha ao deletar o arquivo. Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ [SUCESSO] Arquivo removido com sucesso:", result);
+
+      // Atualiza o estado somente após a confirmação da API
+      setSelectedFiles(prevFiles => {
+        const newFiles = prevFiles.filter(file => !('id' in file) || file.id !== fileId);
+        console.log(`📝 [ATUALIZAÇÃO] Lista atualizada: ${prevFiles.length} → ${newFiles.length} arquivos`);
+        return newFiles;
+      });
+
+      // Arquivo removido com sucesso (sem alert)
+
+    } catch (error) {
+      console.error("❌ [ERRO] Falha ao deletar o arquivo:", error);
+      alert(`❌ Erro ao deletar o arquivo "${fileName}":\n\n${error instanceof Error ? error.message : "Erro desconhecido. Tente novamente."}`);
+    }
   };
 
   const handleSubmit = async () => {
@@ -75,8 +162,10 @@ export default function PdfUpload({ onComplete }: PdfUploadProps) {
       if (!session) throw new Error("Usuário não autenticado.");
 
     const formData = new FormData();
-    // Adiciona TODOS os arquivos ao mesmo FormData com o nome de campo no plural
-    selectedFiles.forEach(file => {
+    // Adiciona apenas arquivos do tipo File (não enviados ainda) ao FormData
+    const filesToUpload = selectedFiles.filter((file): file is File => 'name' in file && !('id' in file));
+    
+    filesToUpload.forEach(file => {
         formData.append('pdfFile', file); 
     });
 
@@ -114,17 +203,35 @@ export default function PdfUpload({ onComplete }: PdfUploadProps) {
       {/* Lista de Arquivos Selecionados */}
       {selectedFiles.length > 0 && (
         <div className="space-y-2 mb-4">
-          {selectedFiles.map((file, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-teal-600" />
-                <span className="text-sm text-gray-800">{file.name}</span>
+          {selectedFiles.map((file, index) => {
+            const fileName = 'name' in file ? file.name : (file as UploadedFile).file_name;
+            const canRemove = 'id' in file; // Só pode remover arquivos que já foram enviados (têm ID)
+            
+            return (
+              <div key={index} className="flex items-center justify-between p-2 bg-gray-100 rounded-md">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-teal-600" />
+                  <span className="text-sm text-gray-800">{fileName}</span>
+                  {!canRemove && <span className="text-xs text-gray-500">(Novo)</span>}
+                </div>
+                {canRemove ? (
+                  <button onClick={() => handleRemoveFile(index)} className="p-1 text-red-600 hover:text-red-500 rounded-full hover:bg-red-100">
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setSelectedFiles(prevFiles => prevFiles.filter((_, i) => i !== index));
+                    }} 
+                    className="p-1 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-200"
+                    title="Remover arquivo não enviado"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <button onClick={() => handleRemoveFile(index)} className="p-1 text-red-600 hover:text-red-500 rounded-full hover:bg-red-100">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

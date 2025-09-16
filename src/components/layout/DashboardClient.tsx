@@ -8,6 +8,7 @@ import { createClient } from '@/clients/supabaseClient';
 import { useUser } from '@/context/UserContext';
 import { useState } from 'react';
 import RoomTypeManager from '../infoUpload';
+import PdfUpload from '../pdfUpload';
 import axios from 'axios';
 
 interface Balance {
@@ -19,7 +20,7 @@ interface Balance {
 export default function DashboardClient() {
   const { userData, loading } = useUser();
   const supabase = createClient();
-  const [view, setView] = useState<'dashboard' | 'manage_rooms'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'manage_rooms' | 'manage_pdfs'>('dashboard');
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [isConnectingWhatsapp, setIsConnectingWhatsapp] = useState(false);
   const [status, setStatus] = useState<'idle' | 'loading_qr' | 'showing_qr' | 'connected' | 'error'>('idle');
@@ -252,6 +253,18 @@ export default function DashboardClient() {
     );
   }
 
+  if (view === 'manage_pdfs') {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8"> 
+        <div className="max-w-4xl mx-auto"> 
+          <PdfUpload onComplete={handleReturnToDashboard} /> 
+        
+        </div> 
+      </div> 
+    );
+  }
+        
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -312,7 +325,7 @@ export default function DashboardClient() {
               
               <div className="mt-2 h-10 flex items-center">
                 {renderAvailableBalance()}
-              </div>
+              </div>            
 
               {/* Exibe a mensagem de erro detalhada abaixo do valor */}
               {error && !loading && (
@@ -395,9 +408,12 @@ export default function DashboardClient() {
             <div className="bg-white p-6 rounded-lg shadow-sm"> 
                 <h3 className="text-lg font-semibold text-gray-900">Base de Conhecimento</h3> 
                 <p className="text-sm text-gray-500 mt-1">Gerencie os documentos e informações do seu negócio.</p> 
-                <Link href="/onboarding/pdf" className="mt-4 block text-center w-full px-4 py-2 bg-white text-teal-700 border border-teal-600 rounded-md font-semibold hover:bg-teal-50"> 
-                    Gerenciar PDFs 
-                </Link> 
+                <button 
+                  onClick={() => setView('manage_pdfs')} // <-- Muda o estado para exibir o gerenciador
+                  className="mt-4 block text-center w-full px-4 py-2 bg-white text-teal-700 border border-teal-600 rounded-md font-semibold hover:bg-teal-50"
+                >
+                    Gerenciar Pdfs 
+                </button>
             </div> 
         </div>
       </div>
