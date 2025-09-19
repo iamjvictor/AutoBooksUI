@@ -254,16 +254,19 @@ export default function DashboardClient() {
         `${process.env.NEXT_PUBLIC_API_URL}/devices/connect`,
         deviceConfig
       );
-      console.log('data', data);
-      if (data.result.qr && data.result.qr.startsWith('data:image')) {
-        setQrCode(data.result.qr);
+      
+      if (data.qrCodeBase64 && data.qrCodeBase64.startsWith('data:image')) {
+        setQrCode(data.qrCodeBase64);
         setStatus('showing_qr');
-      } else if (data.result.qr === 'CONNECTED') {
-        setQrCode(null);
-        setStatus('connected');
-        setIsWhatsappConnected(true);
-        alert('WhatsApp conectado com sucesso!');
+         // Timeout para esconder o QRCode após 15s
+        setTimeout(() => {
+          setQrCode(null);
+          setStatus('idle');
+          checkWhatsappStatus();
+        }, 15000);
+      
       }
+      
     } catch (err: any) {
       alert('Erro ao conectar WhatsApp: ' + (err?.response?.data?.error || err.message));
     } finally {
@@ -328,7 +331,7 @@ export default function DashboardClient() {
       }
     } catch (err: any) {
       alert('Erro ao conectar com o Stripe: ' + (err?.response?.data?.error || err.message));
-    }}
+  }}
 
   const formatCurrency = (amount: number, currency: any) => {
   if (typeof amount !== 'number' || !currency) return 'R$ --,--';
@@ -336,7 +339,7 @@ export default function DashboardClient() {
     style: 'currency',
     currency: currency,
   }).format(amount / 100);
-};
+  };
 
   // O resto da lógica síncrona do componente continua aqui
   if (loading) {
@@ -345,8 +348,7 @@ export default function DashboardClient() {
 
   if (!userData) {
     return <div>Dados do usuário não encontrados</div>;
-  }
-  
+  }  
 
   const { profile } = userData;
   const isOnboardingComplete = profile.status === 'active';
