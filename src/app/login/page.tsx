@@ -7,13 +7,18 @@ import { useRef } from "react";
 import { useState } from "react";
 import Toast from "@/components/common/Toast";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react"; // Importe um ícone de loading
+import { Loader2 } from "lucide-react";
+
+import PhoneInput from 'react-phone-number-input';
+import { E164Number } from "libphonenumber-js/core";
  
 export default function LoginPage() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [inputType, setInputType] = useState<'email' | 'phone'>('email');
+  const [phoneNumber, setPhoneNumber] = useState<E164Number | undefined>();
   const nav = useRouter();
   const supabase = createClient();
 
@@ -28,22 +33,44 @@ export default function LoginPage() {
     const email = emailRef.current?.value;
     const password = passwordRef.current?.value;
 
-    if (!email || !password) {
-      showToast("Por favor, preencha todos os campos.");
-      setIsLoading(false);
-      return;
+    // Validação baseada no tipo de entrada
+    if (inputType === 'phone') {
+      if (!phoneNumber || !password) {
+        showToast("Por favor, preencha todos os campos.");
+        setIsLoading(false);
+        return;
+      }
+    } else {
+      if (!email || !password) {
+        showToast("Por favor, preencha todos os campos.");
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
-      // 1. Tenta fazer o login
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      let loginCredentials;
+      
+      if (inputType === 'phone' && phoneNumber) {
+        // Remove o + do número para enviar ao Supabase
+        const phoneWithoutPlus = phoneNumber.replace('+', '');
+        loginCredentials = {
+          phone: phoneWithoutPlus,
+          password
+        };
+      } else if (email) {
+        loginCredentials = {
+          email,
+          password
+        };
+      } else {
+        throw new Error("Dados de login inválidos.");
+      }
 
-      // 2. A VERIFICAÇÃO CRUCIAL QUE FALTAVA
-      // Se o Supabase retornou um erro (senha errada, usuário não existe),
-      // nós lançamos uma exceção e paramos o fluxo aqui.
+      console.log("loginCredentials", loginCredentials);
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword(loginCredentials);
+
+      console.log("signInError", signInError);
       if (signInError) {
         throw new Error("Email ou senha inválidos.");
       }
@@ -87,6 +114,43 @@ export default function LoginPage() {
 
   return (
     <main className="flex items-center justify-center min-h-screen bg-teal-600">
+      <style jsx global>{`
+        .PhoneInput {
+          display: flex;
+          width: 100%;
+        }
+        .PhoneInputCountrySelect {
+          background: white;
+          border: 1px solid #d1d5db;
+          border-radius: 0.375rem 0 0 0.375rem;
+          padding: 0.5rem 0.75rem;
+          color: #111827;
+          font-size: 1rem;
+          outline: none;
+        }
+        .PhoneInputCountrySelect:focus {
+          border-color: #0d9488;
+          box-shadow: 0 0 0 1px #0d9488;
+        }
+        .PhoneInputInput {
+          background: white;
+          border: 1px solid #d1d5db;
+          border-radius: 0 0.375rem 0.375rem 0;
+          border-left: none;
+          padding: 0.5rem 0.75rem;
+          color: #111827;
+          font-size: 1rem;
+          outline: none;
+          width: 100%;
+        }
+        .PhoneInputInput:focus {
+          border-color: #0d9488;
+          box-shadow: 0 0 0 1px #0d9488;
+        }
+        .PhoneInputInput::placeholder {
+          color: #9ca3af;
+        }
+      `}</style>
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-2xl shadow-lg">
         {/* Ícone e Título */}
         <div className="text-center">
@@ -106,23 +170,49 @@ export default function LoginPage() {
 
         {/* Formulário */}
         <form onSubmit={doLogin} className="space-y-6">
-          {/* Campo de Email */}
+          {/* Campo de Email/Telefone */}
           <div>
-            <label 
-              htmlFor="email" 
-              className="block text-sm font-medium text-gray-700"
-            >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              ref={emailRef}
-              name="email"
-              placeholder="seu@email.com"
-              className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 text-black focus:border-teal-500"
-              
-            />
+            <div className="flex items-center justify-between mb-2">
+              <label 
+                htmlFor="email" 
+                className="block text-sm font-medium text-gray-700"
+              >
+                {inputType === 'email' ? 'Email' : 'Telefone'}
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setInputType(inputType === 'email' ? 'phone' : 'email');
+                  setPhoneNumber(undefined);
+                  if (emailRef.current) {
+                    emailRef.current.value = '';
+                  }
+                }}
+                className="text-xs text-teal-600 hover:text-teal-700 underline"
+              >
+                {inputType === 'email' ? 'Usar telefone' : 'Usar email'}
+              </button>
+            </div>
+            
+            {inputType === 'phone' ? (
+              <PhoneInput
+                international
+                defaultCountry="BR"
+                value={phoneNumber}
+                onChange={setPhoneNumber}
+                className="mt-1"
+                placeholder="Digite seu número"
+              />
+            ) : (
+              <input
+                type="email"
+                id="email"
+                ref={emailRef}
+                name="email"
+                placeholder="seu@email.com"
+                className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-teal-500 text-black focus:border-teal-500"
+              />
+            )}
           </div>
 
           {/* Campo de Senha */}

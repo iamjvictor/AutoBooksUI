@@ -1,9 +1,12 @@
 // src/components/Pricing.tsx
+"use client";
 import { Check, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { plans } from "../data/plans";
 
 export default function Pricing() {
+  const nav = useRouter();
   return (
     <section id="planos" className="bg-gray-50 py-20">
       <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
@@ -61,6 +64,7 @@ export default function Pricing() {
                 className={`mt-8 w-full rounded-xl px-4 py-3 font-semibold shadow-md transition 
                     ${plan.popular ? "bg-teal-600 text-white" : "bg-gray-400 text-gray-800"} 
                     hover:bg-teal-600 hover:text-white`}
+                onClick={() => nav.push('/register')}
                 >
                 Assinar {plan.name}
             </button>

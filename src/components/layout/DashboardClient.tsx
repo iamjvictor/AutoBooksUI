@@ -32,36 +32,98 @@ export default function DashboardClient() {
   const [isVisible, setIsVisible] = useState(false);   // Controla se o saldo é visível
   const [loading2, setLoading] = useState(false);       // Controla o estado de carregamento
   const [error, setError] = useState<string | null>(null);            // Armazena mensagens de erro
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false); // Modal de desconexão
+  const [disconnectLoading, setDisconnectLoading] = useState(false); // Loading da desconexão
+  const [disconnectError, setDisconnectError] = useState<string | null>(null); // Erro da desconexão
+  const [isGoogleConnected, setIsGoogleConnected] = useState<boolean | null>(null); // Estado dinâmico do Google
+  const [isWhatsappConnected, setIsWhatsappConnected] = useState<boolean>(false); // Estado do WhatsApp
+  const [whatsappDisconnectLoading, setWhatsappDisconnectLoading] = useState(false); // Loading da desconexão WhatsApp
+
+  // Função para verificar status do Google dinamicamente
+  const checkGoogleStatus = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google/check`, {
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setIsGoogleConnected(data.hasGoogleIntegration);
+      } else {
+        setIsGoogleConnected(false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status do Google:', error);
+      setIsGoogleConnected(false);
+    }
+  };
+
+  // Função para verificar status do WhatsApp
+  const checkWhatsappStatus = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      if (!userData || !userData.profile) {
+        alert('Dados do usuário não encontrados. Faça login novamente.');
+        return;
+      }
+
+      const deviceId = `device-${userData.profile.whatsapp_number.replace(/\D/g, '')}`;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/devices/status/${encodeURIComponent(deviceId)}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${session.access_token}` },
+      });
+     
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('data', data);
+        if(data.deviceId === deviceId){
+          setIsWhatsappConnected(true);
+        }
+       
+       
+      } else {
+        setIsWhatsappConnected(false);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar status do WhatsApp:', error);
+      setIsWhatsappConnected(false);
+    }
+  };
 
   // --- FUNÇÃO PARA BUSCAR E/OU REVELAR O SALDO ---
   const handleToggleVisibility = async () => {
     // Se o saldo já foi buscado, apenas alterna a visibilidade
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log('Sessão atual:', session?.access_token);
-    if (balance) {
+    if (balance !== null) {
       setIsVisible(!isVisible);
       return;
     }
+
+    // Se é a primeira vez, busca o saldo na API
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Sessão atual:', session?.access_token);
 
     if (!session) {
       setError('Sessão não encontrada. Por favor, faça login novamente.');
-      setLoading(false);
-      setIsVisible(!isVisible);
       return;
     }
 
-      // Se é a primeira vez, busca o saldo na API
-      setLoading(true);
-      setError(null);
-      setIsVisible(true); // Mostra o loader no lugar do saldo
+    setLoading(true);
+    setError(null);
+    setIsVisible(true); // Mostra o loader no lugar do saldo
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/balance`, {
-      headers: {
-        // O padrão é 'Bearer ' seguido do token
-        'Authorization': `Bearer ${session.access_token}`,
-      },
-    });
+        headers: {
+          // O padrão é 'Bearer ' seguido do token
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
       const data = await response.json();
       console.log('Resposta da API de saldo:', data);
 
@@ -78,8 +140,7 @@ export default function DashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
-  
+  }; 
 
   // O handler do clique agora é uma função 'async'
   const handleConnectGoogleCalendar = async () => {
@@ -119,6 +180,51 @@ export default function DashboardClient() {
     // 3. Redireciona o usuário
     console.log("Redirecionando para o Google...");
     window.location.href = `${googleAuthUrl}?${params.toString()}`;
+    
+    // Nota: O estado será atualizado quando o usuário retornar do Google
+    // através do callback que recarrega a página
+  };
+
+  const handleDisconnectGoogle = async () => {
+    setDisconnectLoading(true);
+    setDisconnectError(null);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sessão não encontrada. Faça login novamente.');
+      }
+      
+      const jwt = session.access_token;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwt}`,
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao desconectar Google Agenda');
+      }
+      
+      // Sucesso - fechar modal e atualizar estado
+      setShowDisconnectModal(false);
+      setIsGoogleConnected(false); 
+      // Atualiza o estado local imediatamente
+      handleDisconnectWhatsapp();
+      
+      // Opcional: recarregar dados do contexto também
+      if (window.location) {
+        window.location.reload();
+      }
+      
+    } catch (error) {
+      console.error('Erro ao desconectar Google:', error);
+      setDisconnectError(error instanceof Error ? error.message : 'Erro desconhecido');
+    } finally {
+      setDisconnectLoading(false);
+    }
   };
 
   const handleReturnToDashboard = () => {
@@ -148,10 +254,14 @@ export default function DashboardClient() {
         `${process.env.NEXT_PUBLIC_API_URL}/devices/connect`,
         deviceConfig
       );
-      if (data.result && data.result.startsWith('data:image')) {
-        setQrCode(data.result);
-      } else if (data.result === 'CONNECTED') {
+      console.log('data', data);
+      if (data.result.qr && data.result.qr.startsWith('data:image')) {
+        setQrCode(data.result.qr);
+        setStatus('showing_qr');
+      } else if (data.result.qr === 'CONNECTED') {
         setQrCode(null);
+        setStatus('connected');
+        setIsWhatsappConnected(true);
         alert('WhatsApp conectado com sucesso!');
       }
     } catch (err: any) {
@@ -160,6 +270,45 @@ export default function DashboardClient() {
       setIsConnectingWhatsapp(false);
     }
   };
+  const handleDisconnectWhatsapp = async () => {
+    setWhatsappDisconnectLoading(true);
+    
+    try {
+      if (!userData || !userData.profile) {
+        alert('Dados do usuário não encontrados. Faça login novamente.');
+        return;
+      }
+
+      const deviceId = `device-${userData.profile.whatsapp_number.replace(/\D/g, '')}`;
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/devices/disconnect`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deviceId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao desconectar WhatsApp');
+      }
+
+      // Atualizar estados locais
+      setIsWhatsappConnected(false);
+      setQrCode(null);
+      setStatus('idle');
+      alert('WhatsApp desconectado com sucesso!');
+
+    } catch (error) {
+      console.error('Erro ao desconectar WhatsApp:', error);
+      alert('Erro ao desconectar WhatsApp: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+    } finally {
+      setWhatsappDisconnectLoading(false);
+    }
+  };
+
   const handleConnectStripe = async () => {
     try {
       if (!userData || !userData.profile) {
@@ -201,9 +350,150 @@ export default function DashboardClient() {
 
   const { profile } = userData;
   const isOnboardingComplete = profile.status === 'active';
-  const isGoogleAgendaConnected = profile.status === 'activeAndConnected';
-  const hasGoogleIntegration = userData.hasGoogleIntegration;
+  const isGoogleAgendaConnected = isGoogleConnected ?? userData.hasGoogleIntegration; // Usa estado dinâmico ou fallback
+  const hasGoogleIntegration = isGoogleConnected ?? userData.hasGoogleIntegration; // Usa estado dinâmico ou fallback
   const isStripeReady = !!profile.stripe_id; // Simples verificação de Stripe
+
+  // Estado para armazenar dados de verificação
+  const [verificationData, setVerificationData] = useState({
+    subscriptionStatus: null,
+    hasStripe: false,
+    hasRooms: false,
+    hasDocuments: false,
+    loading: true
+  });
+
+  // Função para verificar status das etapas no banco
+  const checkOnboardingStatus = async () => {
+    try {
+      setVerificationData(prev => ({ ...prev, loading: true }));
+
+      // Buscar dados completos do perfil incluindo subscription_status
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('stripe_id, subscription_status')
+        .eq('id', profile.id)
+        .single();
+
+      if (profileError) {
+        console.error('Erro ao buscar dados do perfil:', profileError);
+        return;
+      }
+
+      // Verificar se tem quartos cadastrados
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('room_types')
+        .select('id')
+        .eq('user_id', profile.id)
+        .limit(1);
+
+      // Verificar se tem documentos
+      const { data: documentsData, error: documentsError } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('user_id', profile.id)
+        .limit(1);
+
+      setVerificationData({
+        subscriptionStatus: profileData.subscription_status,
+        hasStripe: !!profileData.stripe_id,
+        hasRooms: !roomsError && roomsData && roomsData.length > 0,
+        hasDocuments: !documentsError && documentsData && documentsData.length > 0,
+        loading: false
+      });
+
+    } catch (error) {
+      console.error('Erro ao verificar status do onboarding:', error);
+      setVerificationData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Executar verificação quando o componente montar
+  React.useEffect(() => {
+    checkOnboardingStatus();
+    checkGoogleStatus(); // Verificar status do Google também
+    checkWhatsappStatus(); // Verificar status do WhatsApp também
+  }, [profile.id]);
+
+  // Função para determinar quais passos ainda precisam ser completados
+  const getRemainingSteps = () => {
+    if (verificationData.loading) return [];
+
+    const steps = [];
+    
+    // 1. Verificar se tem subscription ativa
+    if (!verificationData.subscriptionStatus || verificationData.subscriptionStatus !== 'active') {
+      steps.push({
+        id: 'subscription',
+        title: 'Ativar assinatura',
+        description: 'Escolha e pague por um plano para ativar seu assistente de IA',
+        completed: false
+      });
+    }
+    
+    // 2. Verificar se Stripe está conectado
+    if (!verificationData.hasStripe) {
+      steps.push({
+        id: 'stripe',
+        title: 'Conectar Stripe',
+        description: 'Conecte sua conta Stripe para receber pagamentos',
+        completed: false
+      });
+    }
+    
+    // 3. Verificar se tem quartos cadastrados
+    if (!verificationData.hasRooms) {
+      steps.push({
+        id: 'rooms',
+        title: 'Configurar quartos',
+        description: 'Cadastre seus quartos e acomodações',
+        completed: false
+      });
+    }
+    
+    // 4. Verificar se tem PDFs enviados
+    if (!verificationData.hasDocuments) {
+      steps.push({
+        id: 'pdfs',
+        title: 'Enviar PDFs',
+        description: 'Envie documentos com informações do seu negócio',
+        completed: false
+      });
+    }
+    
+    // 5. Verificar se Google Agenda está conectado
+    if (!isGoogleAgendaConnected) {
+      steps.push({
+        id: 'google_calendar',
+        title: 'Conectar Google Agenda',
+        description: 'Sincronize com sua agenda para gerenciar reservas',
+        completed: false
+      });
+    }
+    
+    // 6. Conectar WhatsApp (sempre por último, apenas se não estiver conectado)
+    if (!isWhatsappConnected) {
+      steps.push({
+        id: 'whatsapp',
+        title: 'Conectar WhatsApp',
+        description: 'Conecte seu WhatsApp para automatizar atendimento',
+        completed: false
+      });
+    }
+    
+    return steps;
+  };
+
+  const remainingSteps = getRemainingSteps();
+  const hasRemainingSteps = remainingSteps.length > 0;
+
+  // Verificar se usuário está inadimplente e redirecionar para planos
+  React.useEffect(() => {
+    if (!verificationData.loading && verificationData.subscriptionStatus && verificationData.subscriptionStatus !== 'active') {
+      // Redirecionar para página de planos se não estiver ativo
+      window.location.href = '/onboarding/planos';
+    }
+  }, [verificationData.subscriptionStatus, verificationData.loading]);
 
   const renderAvailableBalance = () => {
     if (!isVisible) {
@@ -272,23 +562,48 @@ export default function DashboardClient() {
           Bem-vindo de volta, {profile.full_name}!
         </h1>
 
-        {/* --- BANNER DE ONBOARDING --- */}
-        {!isGoogleAgendaConnected && (
+        {/* --- BANNER DE ONBOARDING DINÂMICO --- */}
+        {verificationData.loading ? (
+          <div className="mt-6 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-md">
+            <div className="flex items-center">
+              <Loader2 className="h-5 w-5 animate-spin mr-3" />
+              <span>Verificando status da sua conta...</span>
+            </div>
+          </div>
+        ) : hasRemainingSteps ? (
           <div className="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-md">
             <div className="flex items-start">
               <AlertTriangle className="h-5 w-5 mt-0.5" />
               <div className="ml-3">
-                <h2 className="font-semibold">Quase lá! Complete sua configuração.</h2>
-                <p className="text-sm">Finalize as etapas abaixo para ativar seu assistente de IA.</p>
-                 <ul className="list-disc list-inside mt-2 text-sm">
-                    {profile.status === 'onboarding_pdf' && <li>Enviar PDF de informações</li>}
-                    {profile.status === 'onboarding_rooms' && <li>Cadastrar acomodações</li>}
-                    {profile.status === 'active' && <li>Conectar Google Agenda</li>}
-                 </ul>
+                <h2 className="font-semibold">
+                  {remainingSteps.length === 1 
+                    ? 'Falta apenas 1 passo!' 
+                    : `Faltam ${remainingSteps.length} passos!`
+                  }
+                </h2>
+                <p className="text-sm mb-3">
+                  {remainingSteps.length === 1 
+                    ? 'Complete a etapa abaixo para ativar seu assistente de IA.'
+                    : 'Complete as etapas abaixo para ativar seu assistente de IA.'
+                  }
+                </p>
+                <div className="space-y-2">
+                  {remainingSteps.map((step, index) => (
+                    <div key={step.id} className="flex items-center text-sm">
+                      <span className="w-6 h-6 bg-yellow-200 text-yellow-800 rounded-full flex items-center justify-center text-xs font-semibold mr-3">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <span className="font-medium">{step.title}</span>
+                        <span className="text-yellow-700 ml-2">- {step.description}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        )}
+        ) : null}
 
     {/* --- SEÇÃO DE MÉTRICAS E ONBOARDING DO STRIPE --- */}
         <div className="mt-8">
@@ -362,19 +677,39 @@ export default function DashboardClient() {
             <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900">Conecte seus Canais</h3>
                 <p className="text-sm text-gray-500 mt-1">Conecte para automatizar o atendimento.</p>
-                <button
-                  onClick={handleConnectWhatsapp}
-                  disabled={!isGoogleAgendaConnected || isConnectingWhatsapp}
-                  className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                    <Phone className="h-5 w-5" />
-                    {isConnectingWhatsapp ? 'Conectando...' : 'Conectar WhatsApp'}
-                    {!isGoogleAgendaConnected && <Lock className="h-4 w-4 ml-2" />}
-                </button>
-                {qrCode && (
-                  <div className="mt-4 flex flex-col items-center">
-                    <span className="mb-2 text-sm text-gray-700">Escaneie o QR Code abaixo no seu WhatsApp:</span>
-                    <img src={qrCode} alt="QR Code WhatsApp" className="w-48 h-48" />
+                
+                {!isWhatsappConnected ? (
+                  <>
+                    <button
+                      onClick={handleConnectWhatsapp}
+                      disabled={!isGoogleAgendaConnected || isConnectingWhatsapp}
+                      className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                        <Phone className="h-5 w-5" />
+                        {isConnectingWhatsapp ? 'Conectando...' : 'Conectar WhatsApp'}
+                        {!isGoogleAgendaConnected && <Lock className="h-4 w-4 ml-2" />}
+                    </button>
+                    {qrCode && (
+                      <div className="mt-4 flex flex-col items-center">
+                        <span className="mb-2 text-sm text-gray-700">Escaneie o QR Code abaixo no seu WhatsApp:</span>
+                        <img src={qrCode} alt="QR Code WhatsApp" className="w-48 h-48" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="mt-4">
+                    <div className="flex items-center justify-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-md">
+                      <Phone className="h-5 w-5" />
+                      <span className="font-semibold">WhatsApp Conectado</span>
+                    </div>
+                    <button
+                      onClick={handleDisconnectWhatsapp}
+                      disabled={whatsappDisconnectLoading}
+                      className="mt-3 flex items-center justify-center gap-2 w-full px-4 py-2 bg-red-600 text-white rounded-md font-semibold transition-colors hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      <Phone className="h-5 w-5" />
+                      {whatsappDisconnectLoading ? 'Desconectando...' : 'Desconectar WhatsApp'}
+                    </button>
                   </div>
                 )}
             </div>
@@ -390,6 +725,52 @@ export default function DashboardClient() {
                     Conectar com Google Agenda
                     {hasGoogleIntegration && <Lock className="h-4 w-4 ml-2" />}
                 </button>
+            {/* Botão de Desconectar Google Agenda */}
+            {hasGoogleIntegration && (
+              <>
+                <button
+                  onClick={() => setShowDisconnectModal(true)}
+                  className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-red-600 text-white rounded-md font-semibold transition-colors hover:bg-red-700"
+                >
+                  <Calendar className="h-5 w-5" />
+                  Desconectar Google Agenda
+                </button>
+                {/* Modal de confirmação */}
+                {showDisconnectModal && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+                      <h4 className="text-lg font-bold mb-2 text-gray-900">Desconectar Google Agenda?</h4>
+                      <p className="text-sm text-gray-700 mb-4">
+                        Ao desconectar sua Google Agenda, o bot do WhatsApp também será parado. Tem certeza que deseja continuar?
+                      </p>
+                      {disconnectLoading ? (
+                        <div className="flex justify-center items-center py-2">
+                          <Loader2 className="animate-spin h-6 w-6 text-teal-600" />
+                        </div>
+                      ) : (
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setShowDisconnectModal(false)}
+                            className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={handleDisconnectGoogle}
+                            className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-700"
+                          >
+                            Desconectar
+                          </button>
+                        </div>
+                      )}
+                      {disconnectError && (
+                        <p className="text-xs text-red-600 mt-2">{disconnectError}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
             </div>
         </div>
 

@@ -101,6 +101,28 @@ export default function ProfilePage() {
     }
   }
 
+  const cancelPlan = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      throw new Error("Sessão não encontrada.");
+    }
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/cancel-subscription`, {
+      method: 'POST',      
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Falha ao cancelar o plano.");
+    }
+
+    alert("Plano cancelado com sucesso!");
+  }
+
  const handleSave = async () => {
     if (!formData) return;
 
@@ -255,6 +277,13 @@ export default function ProfilePage() {
             className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
           >
             Redefinir senha
+          </button>
+          <button
+            type="button" // Importante ser 'button' para não submeter o formulário
+            onClick={cancelPlan}
+            className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
+          >
+            Cancelar Plano
           </button>
 
           

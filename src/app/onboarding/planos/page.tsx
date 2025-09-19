@@ -1,10 +1,10 @@
 // src/app/onboarding/planos/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Clock, CreditCard, QrCode } from "lucide-react";
 import { plans, type Plan } from "@/data/plans";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // IMPORTE OS NOVOS COMPONENTES
 import PixPayment from "@/components/Payments/PixPayments";
@@ -13,9 +13,6 @@ import PdfUpload from "@/components/pdfUpload";
 import InfoUpload from "@/components/infoUpload";
 import { createClient } from "@/clients/supabaseClient";
 
-// O componente PdfUpload precisa ser movido para seu próprio arquivo também
-// Ex: src/components/onboarding/PdfUpload.tsx
-
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function PlanosPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -23,7 +20,16 @@ export default function PlanosPage() {
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card' | null>(null);
 
   const nav = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Verifica se deve mostrar a etapa de upload baseado na URL
+  useEffect(() => {
+    const showUploadStep = searchParams.get('showUploadStep') === 'true';
+    if (showUploadStep) {
+      setCurrentStep('pdfUpload');
+    }
+  }, [searchParams]);
 
   // ... (todas as suas funções handle... continuam aqui, sem alterações)
   const handleSelectPlan = (plan: Plan) => {
@@ -217,13 +223,7 @@ export default function PlanosPage() {
                   </p>
                 </div>
                 <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => handlePaymentMethodSelect('pix')}
-                    className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-md shadow-sm text-lg font-semibold text-gray-800 bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <QrCode className="h-6 w-6"/>
-                    Pagar com Pix
-                  </button>
+                 
                   <button
                     onClick={() => handlePaymentMethodSelect('credit_card')}
                     className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-colors"

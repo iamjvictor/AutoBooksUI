@@ -22,7 +22,8 @@ export interface UserProfile {
   zip_code: string;
   status: 'active' | 'onboarding_plans' | 'onboarding_pdf' | 'onboarding_rooms'| 'activeAndConnected'| 'readyToUse';
   stripe_id: string | null;
-  email?: string; 
+  email?: string;
+
 }
 
 // A estrutura completa que o nosso Contexto vai fornecer
