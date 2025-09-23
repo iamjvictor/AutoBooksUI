@@ -39,6 +39,15 @@ export default function DashboardClient() {
   const [isWhatsappConnected, setIsWhatsappConnected] = useState<boolean>(false); // Estado do WhatsApp
   const [whatsappDisconnectLoading, setWhatsappDisconnectLoading] = useState(false); // Loading da desconexão WhatsApp
 
+  // Estado para armazenar dados de verificação
+  const [verificationData, setVerificationData] = useState({
+    subscriptionStatus: null as string | null,
+    hasStripe: false,
+    hasRooms: false,
+    hasDocuments: false,
+    loading: true
+  });
+
   // Função para verificar status do Google dinamicamente
   const checkGoogleStatus = async () => {
     try {
@@ -268,8 +277,10 @@ export default function DashboardClient() {
       
       }
       
-    } catch (err: any) {
-      alert('Erro ao conectar WhatsApp: ' + (err?.response?.data?.error || err.message));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const responseError = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert('Erro ao conectar WhatsApp: ' + (responseError || errorMessage));
     } finally {
       setIsConnectingWhatsapp(false);
     }
@@ -330,17 +341,62 @@ export default function DashboardClient() {
       } else {
         alert('Erro ao iniciar o processo de onboarding do Stripe.');
       }
-    } catch (err: any) {
-      alert('Erro ao conectar com o Stripe: ' + (err?.response?.data?.error || err.message));
-  }}
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      const responseError = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      alert('Erro ao conectar com o Stripe: ' + (responseError || errorMessage));
+    }
+  }
 
-  const formatCurrency = (amount: number, currency: any) => {
+  const formatCurrency = (amount: number, currency: string) => {
   if (typeof amount !== 'number' || !currency) return 'R$ --,--';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: currency,
   }).format(amount / 100);
   };
+
+  // Executar verificação quando o componente montar
+  React.useEffect(() => {
+    if (!userData?.profile) return;
+    checkOnboardingStatus();
+    checkGoogleStatus(); // Verificar status do Google também
+    checkWhatsappStatus(); // Verificar status do WhatsApp também
+  }, [userData?.profile?.id, status]);
+
+  // Verificar se usuário está inadimplente e redirecionar para planos
+  React.useEffect(() => {
+    // Só executa a lógica quando o carregamento terminar e tivermos um status
+    if (verificationData.loading || !verificationData.subscriptionStatus) {
+      return;
+    }
+
+    const status = verificationData.subscriptionStatus;
+
+    // --- LÓGICA DE REDIRECIONAMENTO INTELIGENTE ---
+
+    // 1. O utilizador está com o pagamento em atraso?
+    //    Se sim, redireciona-o para a página que aciona o Portal da Stripe.
+    if (status === 'past_due' || status === 'unpaid') {
+      console.log("Assinatura em atraso. A redirecionar para a atualização de pagamento...");
+      // Esta é a nova página que criámos no guia anterior.
+      window.location.href = '/atualizar-pagamento'; 
+      return; // Para a execução para evitar outros redirecionamentos
+    }
+
+    // 2. A assinatura está ativa ou em período de teste?
+    //    Se sim, não faz nada. O acesso está permitido.
+    if (status === 'active' || status === 'trialing') {
+      console.log("Assinatura ativa. Acesso permitido.");
+      return;
+    }
+
+    // 3. Para todos os outros casos (ex: 'canceled', 'incomplete', etc.)
+    //    Redireciona para a página de planos para que ele possa iniciar uma nova assinatura.
+    console.log(`Assinatura com status '${status}'. A redirecionar para a página de planos...`);
+    window.location.href = '/onboarding/planos';
+
+  }, [verificationData.subscriptionStatus, verificationData.loading]);
 
   // O resto da lógica síncrona do componente continua aqui
   if (loading) {
@@ -357,14 +413,6 @@ export default function DashboardClient() {
   const hasGoogleIntegration = isGoogleConnected ?? userData.hasGoogleIntegration; // Usa estado dinâmico ou fallback
   const isStripeReady = !!profile.stripe_id; // Simples verificação de Stripe
 
-  // Estado para armazenar dados de verificação
-  const [verificationData, setVerificationData] = useState({
-    subscriptionStatus: null,
-    hasStripe: false,
-    hasRooms: false,
-    hasDocuments: false,
-    loading: true
-  });
 
   // Função para verificar status das etapas no banco
   const checkOnboardingStatus = async () => {
@@ -410,14 +458,6 @@ export default function DashboardClient() {
       setVerificationData(prev => ({ ...prev, loading: false }));
     }
   };
-
-  // Executar verificação quando o componente montar
-  React.useEffect(() => {
-    checkOnboardingStatus();
-    checkGoogleStatus(); // Verificar status do Google também
-    checkWhatsappStatus(); // Verificar status do WhatsApp também
-  }, [profile.id, status]);
-    // Armazena o saldo buscado
 
   
   // Função para determinar quais passos ainda precisam ser completados
@@ -492,41 +532,6 @@ export default function DashboardClient() {
   const remainingSteps = getRemainingSteps();
   const hasRemainingSteps = remainingSteps.length > 0;
 
-  // Verificar se usuário está inadimplente e redirecionar para planos
- // No seu componente de frontend que verifica a autenticação/subscrição
-
-React.useEffect(() => {
-  // Só executa a lógica quando o carregamento terminar e tivermos um status
-  if (verificationData.loading || !verificationData.subscriptionStatus) {
-    return;
-  }
-
-  const status = verificationData.subscriptionStatus;
-
-  // --- LÓGICA DE REDIRECIONAMENTO INTELIGENTE ---
-
-  // 1. O utilizador está com o pagamento em atraso?
-  //    Se sim, redireciona-o para a página que aciona o Portal da Stripe.
-  if (status === 'past_due' || status === 'unpaid') {
-    console.log("Assinatura em atraso. A redirecionar para a atualização de pagamento...");
-    // Esta é a nova página que criámos no guia anterior.
-    window.location.href = '/atualizar-pagamento'; 
-    return; // Para a execução para evitar outros redirecionamentos
-  }
-
-  // 2. A assinatura está ativa ou em período de teste?
-  //    Se sim, não faz nada. O acesso está permitido.
-  if (status === 'active' || status === 'trialing') {
-    console.log("Assinatura ativa. Acesso permitido.");
-    return;
-  }
-
-  // 3. Para todos os outros casos (ex: 'canceled', 'incomplete', etc.)
-  //    Redireciona para a página de planos para que ele possa iniciar uma nova assinatura.
-  console.log(`Assinatura com status '${status}'. A redirecionar para a página de planos...`);
-  window.location.href = '/onboarding/planos';
-
-}, [verificationData.subscriptionStatus, verificationData.loading]);
 
   const renderAvailableBalance = () => {
     if (!isVisible) {

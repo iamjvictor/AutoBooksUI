@@ -1,10 +1,10 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
-export default function PaymentStatusPage() {
+function PaymentStatusPageContent() {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [paymentData, setPaymentData] = useState<{
@@ -130,5 +130,13 @@ export default function PaymentStatusPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function PaymentStatusPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <PaymentStatusPageContent />
+    </Suspense>
   );
 }

@@ -1,7 +1,7 @@
 // src/app/onboarding/planos/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Check, Clock, CreditCard, QrCode } from "lucide-react";
 import { plans, type Plan } from "@/data/plans";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,7 +14,7 @@ import InfoUpload from "@/components/infoUpload";
 import { createClient } from "@/clients/supabaseClient";
 
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
-export default function PlanosPage() {
+function PlanosPageContent() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [currentStep, setCurrentStep] = useState<'plans' | 'payment' | 'pdfUpload' | 'infoUpload'>('plans');
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card' | null>(null);
@@ -266,5 +266,14 @@ export default function PlanosPage() {
 
       </div>
     </main>
+  );
+}
+
+// --- COMPONENTE WRAPPER COM SUSPENSE ---
+export default function PlanosPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <PlanosPageContent />
+    </Suspense>
   );
 }

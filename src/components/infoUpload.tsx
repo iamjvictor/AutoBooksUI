@@ -88,7 +88,7 @@ export default function RoomTypeManager({ onComplete }: RoomTypeManagerProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado.");
       
-      let response;
+   
       let url = `${process.env.NEXT_PUBLIC_API_URL}/rooms`;
       let method = 'POST';
 
@@ -103,7 +103,7 @@ export default function RoomTypeManager({ onComplete }: RoomTypeManagerProps) {
 
       console.log('Enviando para a API:', { body });
 
-      response = await fetch(url, {
+      const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
         body: JSON.stringify(body),
