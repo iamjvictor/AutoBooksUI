@@ -18,7 +18,7 @@ export interface Plan {
 export const plans: Plan[] = [
   {
    // id: "prod_T4JcAxvgvKBRkW",
-    id: "price_1S8CXJAzh8iKKBsjp83bSYJV"  ,  
+    id: "price_1S8AytB29olWOHM6GmiUlVGa"  ,  
     name: "Essencial",
     price: "R$ 97/mês",
     slogan: "Sua recepção automática, 24 horas por dia.",
@@ -33,7 +33,7 @@ export const plans: Plan[] = [
     avaiable: true
   },
   {
-    id: "prod_T4L4fyS3ykjGTD",
+    id: "price_1S8CO2B29olWOHM6kwXcwuh5",
     name: "Pro",
     price: "R$ 197/mês",
     slogan: "Transforme conversas em reservas pagas.",
@@ -50,7 +50,7 @@ export const plans: Plan[] = [
     avaiable: false
   },
   {
-    id: "prod_T4L4H0ZwQUwB4b",
+    id: "price_1S8COGB29olWOHM6sgmTFGGX",
     name: "Business",
     price: "R$ 297/mês",
     slogan: "Domine sua comunicação em todos os canais.",
