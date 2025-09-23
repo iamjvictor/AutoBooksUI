@@ -6,7 +6,7 @@ import { AlertTriangle, DollarSign, MessageCircle, CalendarDays, Lock, Phone, Ca
 import Link from 'next/link';
 import { createClient } from '@/clients/supabaseClient';
 import { useUser } from '@/context/UserContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RoomTypeManager from '../infoUpload';
 import PdfUpload from '../pdfUpload';
 import axios from 'axios';
@@ -28,7 +28,7 @@ export default function DashboardClient() {
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [pendingBalance, setPendingBalance] = useState<number | null>(null);
-     // Armazena o saldo buscado
+ 
   const [isVisible, setIsVisible] = useState(false);   // Controla se o saldo é visível
   const [loading2, setLoading] = useState(false);       // Controla o estado de carregamento
   const [error, setError] = useState<string | null>(null);            // Armazena mensagens de erro
@@ -258,12 +258,13 @@ export default function DashboardClient() {
       if (data.qrCodeBase64 && data.qrCodeBase64.startsWith('data:image')) {
         setQrCode(data.qrCodeBase64);
         setStatus('showing_qr');
-         // Timeout para esconder o QRCode após 15s
+        console.log('QR Code ativo: showing_qr');
+        
+       
         setTimeout(() => {
           setQrCode(null);
           setStatus('idle');
-          checkWhatsappStatus();
-        }, 15000);
+        }, 30000);
       
       }
       
@@ -415,8 +416,10 @@ export default function DashboardClient() {
     checkOnboardingStatus();
     checkGoogleStatus(); // Verificar status do Google também
     checkWhatsappStatus(); // Verificar status do WhatsApp também
-  }, [profile.id]);
+  }, [profile.id, status]);
+    // Armazena o saldo buscado
 
+  
   // Função para determinar quais passos ainda precisam ser completados
   const getRemainingSteps = () => {
     if (verificationData.loading) return [];
@@ -490,12 +493,40 @@ export default function DashboardClient() {
   const hasRemainingSteps = remainingSteps.length > 0;
 
   // Verificar se usuário está inadimplente e redirecionar para planos
-  React.useEffect(() => {
-    if (!verificationData.loading && verificationData.subscriptionStatus && verificationData.subscriptionStatus !== 'active') {
-      // Redirecionar para página de planos se não estiver ativo
-      window.location.href = '/onboarding/planos';
-    }
-  }, [verificationData.subscriptionStatus, verificationData.loading]);
+ // No seu componente de frontend que verifica a autenticação/subscrição
+
+React.useEffect(() => {
+  // Só executa a lógica quando o carregamento terminar e tivermos um status
+  if (verificationData.loading || !verificationData.subscriptionStatus) {
+    return;
+  }
+
+  const status = verificationData.subscriptionStatus;
+
+  // --- LÓGICA DE REDIRECIONAMENTO INTELIGENTE ---
+
+  // 1. O utilizador está com o pagamento em atraso?
+  //    Se sim, redireciona-o para a página que aciona o Portal da Stripe.
+  if (status === 'past_due' || status === 'unpaid') {
+    console.log("Assinatura em atraso. A redirecionar para a atualização de pagamento...");
+    // Esta é a nova página que criámos no guia anterior.
+    window.location.href = '/atualizar-pagamento'; 
+    return; // Para a execução para evitar outros redirecionamentos
+  }
+
+  // 2. A assinatura está ativa ou em período de teste?
+  //    Se sim, não faz nada. O acesso está permitido.
+  if (status === 'active' || status === 'trialing') {
+    console.log("Assinatura ativa. Acesso permitido.");
+    return;
+  }
+
+  // 3. Para todos os outros casos (ex: 'canceled', 'incomplete', etc.)
+  //    Redireciona para a página de planos para que ele possa iniciar uma nova assinatura.
+  console.log(`Assinatura com status '${status}'. A redirecionar para a página de planos...`);
+  window.location.href = '/onboarding/planos';
+
+}, [verificationData.subscriptionStatus, verificationData.loading]);
 
   const renderAvailableBalance = () => {
     if (!isVisible) {
@@ -682,15 +713,26 @@ export default function DashboardClient() {
                 
                 {!isWhatsappConnected ? (
                   <>
-                    <button
-                      onClick={handleConnectWhatsapp}
-                      disabled={!isGoogleAgendaConnected || isConnectingWhatsapp}
-                      className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
+                 {status === 'showing_qr' ? (
+                      <button
+                        onClick={() => {}}
+                        disabled={true}
+                        className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-red-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
+                        <Phone className="h-5 w-5" />
+                        {isConnectingWhatsapp ? 'Conectando...' : 'QR Code Ativo'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleConnectWhatsapp}
+                        disabled={!isGoogleAgendaConnected || isConnectingWhatsapp}
+                        className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      >
                         <Phone className="h-5 w-5" />
                         {isConnectingWhatsapp ? 'Conectando...' : 'Conectar WhatsApp'}
-                        {!isGoogleAgendaConnected && <Lock className="h-4 w-4 ml-2" />}
-                    </button>
+                      </button>
+                    )}
+
                     {qrCode && (
                       <div className="mt-4 flex flex-col items-center">
                         <span className="mb-2 text-sm text-gray-700">Escaneie o QR Code abaixo no seu WhatsApp:</span>

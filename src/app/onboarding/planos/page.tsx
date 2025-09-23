@@ -33,7 +33,10 @@ export default function PlanosPage() {
 
   // ... (todas as suas funções handle... continuam aqui, sem alterações)
   const handleSelectPlan = (plan: Plan) => {
-    setSelectedPlan(plan);
+    // Só permite selecionar planos disponíveis
+    if (plan.avaiable) {
+      setSelectedPlan(plan);
+    }
   };
 
   const handlePaymentMethodSelect = (method: 'pix' | 'credit_card') => {
@@ -161,24 +164,33 @@ export default function PlanosPage() {
                 <div
                   key={plan.name}
                   onClick={() => handleSelectPlan(plan)}
-                  className={`p-6 rounded-lg border-2 cursor-pointer transition-all relative ${
-                    selectedPlan?.name === plan.name
-                      ? 'border-teal-500 bg-teal-50'
-                      : 'border-gray-200 hover:border-gray-400'
+                  className={`p-6 rounded-lg border-2 transition-all relative ${
+                    !plan.avaiable 
+                      ? 'border-gray-200 bg-gray-100 opacity-75 cursor-not-allowed'
+                      : selectedPlan?.name === plan.name
+                        ? 'border-teal-500 bg-teal-50 cursor-pointer'
+                        : 'border-gray-200 hover:border-gray-400 cursor-pointer'
                   }`}
                 >
-                  {plan.popular && selectedPlan?.name !== plan.name && (
+                  {plan.popular && plan.avaiable && selectedPlan?.name !== plan.name && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs bg-teal-500 text-white font-semibold px-3 py-1 rounded-full">
                       Mais Popular
                     </span>
                   )}
-                  {selectedPlan?.name === plan.name && (
+                  {selectedPlan?.name === plan.name && plan.avaiable && (
                     <div className="absolute top-4 right-4 bg-teal-500 text-white rounded-full p-1">
                       <Check className="h-4 w-4" />
                     </div>
                   )}
 
-                  <h2 className="text-xl font-semibold text-gray-800">{plan.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-gray-800">{plan.name}</h2>
+                    {!plan.avaiable && (
+                      <span className="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                        Em Breve
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500 mt-1">{plan.slogan}</p>
                   
                   <p className="text-3xl font-bold text-gray-900 mt-4">
@@ -222,8 +234,7 @@ export default function PlanosPage() {
                     Você selecionou o plano <span className="font-semibold text-teal-600">{selectedPlan.name}</span>.
                   </p>
                 </div>
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 
+                <div className="mt-6">
                   <button
                     onClick={() => handlePaymentMethodSelect('credit_card')}
                     className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-colors"

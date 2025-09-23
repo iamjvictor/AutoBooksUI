@@ -22,15 +22,22 @@ export default function Pricing() {
             <div
               key={plan.name}
               className={`rounded-2xl shadow-lg p-8 flex flex-col ${
-                plan.popular ? "border-2 border-teal-600" : "border border-gray-200"
-              } bg-teal-50`}
+                plan.popular && plan.avaiable ? "border-2 border-teal-600" : "border border-gray-200"
+              } ${!plan.avaiable ? "bg-gray-100 opacity-75" : "bg-teal-50"}`}
             >
-              {plan.popular && (
+              {plan.popular && plan.avaiable && (
                 <span className="mb-3 inline-block rounded-full bg-teal-100 text-teal-800 text-sm font-medium px-3 py-1">
                   Mais Popular
                 </span>
               )}
-              <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
+                {!plan.avaiable && (
+                  <span className="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                    Em Breve
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-gray-600">{plan.slogan}</p>
               <p className="mt-4 text-3xl font-extrabold text-gray-900">{plan.price}</p>
 
@@ -60,13 +67,18 @@ export default function Pricing() {
                 })}
               </ul>
 
-             <button // Adicionando onClick para o botão
+             <button
                 className={`mt-8 w-full rounded-xl px-4 py-3 font-semibold shadow-md transition 
-                    ${plan.popular ? "bg-teal-600 text-white" : "bg-gray-400 text-gray-800"} 
-                    hover:bg-teal-600 hover:text-white`}
-                onClick={() => nav.push('/register')}
+                    ${!plan.avaiable 
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                      : plan.popular 
+                        ? "bg-teal-600 text-white hover:bg-teal-700" 
+                        : "bg-gray-400 text-gray-800 hover:bg-teal-600 hover:text-white"
+                    }`}
+                onClick={() => plan.avaiable && nav.push('/register')}
+                disabled={!plan.avaiable}
                 >
-                Assinar {plan.name}
+                {!plan.avaiable ? "Em Breve" : `Assinar ${plan.name}`}
             </button>
 
             </div>

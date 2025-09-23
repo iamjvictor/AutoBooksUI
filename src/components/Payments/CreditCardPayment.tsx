@@ -97,10 +97,7 @@ export default function CreditCardForm({ plan, onBack, onPaymentSuccess }: Credi
           <p className="text-sm text-gray-600 mb-4">
             Você será redirecionado para uma página segura do Stripe para finalizar o pagamento.
           </p>
-          <div className="flex items-center justify-center gap-2 text-teal-600">
-            <div className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-sm font-medium">Processando...</span>
-          </div>
+        
         </div>
       </div>
 

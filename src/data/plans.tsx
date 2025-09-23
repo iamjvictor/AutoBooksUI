@@ -22,7 +22,7 @@ export const plans: Plan[] = [
     name: "Essencial",
     price: "R$ 97/mês",
     slogan: "Sua recepção automática, 24 horas por dia.",
-    popular: false,
+    popular: true,
     features: [
       "Assistente de IA com Base de Conhecimento (PDF)",
       "1 Rede Social Conectada (WhatsApp)",
@@ -47,7 +47,7 @@ export const plans: Plan[] = [
       "Suporte Prioritário (chat)",
       { text: "CRM", soon: true },
     ],
-    avaiable: true
+    avaiable: false
   },
   {
     id: "prod_T4L4H0ZwQUwB4b",
@@ -63,6 +63,6 @@ export const plans: Plan[] = [
       "Suporte Prioritário (chat)",
       { text: "CRM Enterprise", soon: true },
     ],
-    avaiable: true
+    avaiable: false
   },
 ];
