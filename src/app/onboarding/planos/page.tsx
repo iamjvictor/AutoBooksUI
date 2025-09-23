@@ -1,10 +1,10 @@
 // src/app/onboarding/planos/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Check, Clock, CreditCard, QrCode } from "lucide-react";
 import { plans, type Plan } from "@/data/plans";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // IMPORTE OS NOVOS COMPONENTES
 import PixPayment from "@/components/Payments/PixPayments";
@@ -13,9 +13,6 @@ import PdfUpload from "@/components/pdfUpload";
 import InfoUpload from "@/components/infoUpload";
 import { createClient } from "@/clients/supabaseClient";
 
-// O componente PdfUpload precisa ser movido para seu próprio arquivo também
-// Ex: src/components/onboarding/PdfUpload.tsx
-
 // --- COMPONENTE PRINCIPAL DA PÁGINA ---
 export default function PlanosPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
@@ -23,11 +20,23 @@ export default function PlanosPage() {
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'credit_card' | null>(null);
 
   const nav = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Verifica se deve mostrar a etapa de upload baseado na URL
+  useEffect(() => {
+    const showUploadStep = searchParams.get('showUploadStep') === 'true';
+    if (showUploadStep) {
+      setCurrentStep('pdfUpload');
+    }
+  }, [searchParams]);
 
   // ... (todas as suas funções handle... continuam aqui, sem alterações)
   const handleSelectPlan = (plan: Plan) => {
-    setSelectedPlan(plan);
+    // Só permite selecionar planos disponíveis
+    if (plan.avaiable) {
+      setSelectedPlan(plan);
+    }
   };
 
   const handlePaymentMethodSelect = (method: 'pix' | 'credit_card') => {
@@ -41,13 +50,65 @@ export default function PlanosPage() {
     setPaymentMethod(null);
   }
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
     console.log("Pagamento simulado com sucesso!");
+     try {
+      // 1. Pega a sessão para se autenticar com o backend
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada.");
+
+      // 2. Chama a API para fazer a ÚLTIMA atualização de status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ nextStep: 'onboarding_pdf' }) // O status final!
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao ativar a sua conta.");
+      }
+
+      console.log("Usuário ativado com sucesso! Redirecionando para o dashboard.");
+
+    } catch (error) {
+      console.error("Erro ao ativar o usuário:", error);
+      // Exiba um toast de erro aqui
+    }
+    
     setCurrentStep('pdfUpload');
   };
 
-  const handlePdfComplete = () => {
+  const handlePdfComplete = async () => {
     console.log("pdf enviado! Redirecionando para o dashboard...");
+    try {
+      // 1. Pega a sessão para se autenticar com o backend
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sessão não encontrada.");
+
+      // 2. Chama a API para fazer a ÚLTIMA atualização de status
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/update-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ nextStep: 'onboarding_rooms' }) // O status final!
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao ativar a sua conta.");
+      }
+
+      console.log("Usuário ativado com sucesso! Redirecionando para o dashboard.");
+
+    } catch (error) {
+      console.error("Erro ao ativar o usuário:", error);
+      // Exiba um toast de erro aqui
+    }
+    
     setCurrentStep('infoUpload');
   };
   const handleInfoComplete = async() => {
@@ -103,24 +164,33 @@ export default function PlanosPage() {
                 <div
                   key={plan.name}
                   onClick={() => handleSelectPlan(plan)}
-                  className={`p-6 rounded-lg border-2 cursor-pointer transition-all relative ${
-                    selectedPlan?.name === plan.name
-                      ? 'border-teal-500 bg-teal-50'
-                      : 'border-gray-200 hover:border-gray-400'
+                  className={`p-6 rounded-lg border-2 transition-all relative ${
+                    !plan.avaiable 
+                      ? 'border-gray-200 bg-gray-100 opacity-75 cursor-not-allowed'
+                      : selectedPlan?.name === plan.name
+                        ? 'border-teal-500 bg-teal-50 cursor-pointer'
+                        : 'border-gray-200 hover:border-gray-400 cursor-pointer'
                   }`}
                 >
-                  {plan.popular && selectedPlan?.name !== plan.name && (
+                  {plan.popular && plan.avaiable && selectedPlan?.name !== plan.name && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs bg-teal-500 text-white font-semibold px-3 py-1 rounded-full">
                       Mais Popular
                     </span>
                   )}
-                  {selectedPlan?.name === plan.name && (
+                  {selectedPlan?.name === plan.name && plan.avaiable && (
                     <div className="absolute top-4 right-4 bg-teal-500 text-white rounded-full p-1">
                       <Check className="h-4 w-4" />
                     </div>
                   )}
 
-                  <h2 className="text-xl font-semibold text-gray-800">{plan.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold text-gray-800">{plan.name}</h2>
+                    {!plan.avaiable && (
+                      <span className="text-xs font-medium text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                        Em Breve
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-500 mt-1">{plan.slogan}</p>
                   
                   <p className="text-3xl font-bold text-gray-900 mt-4">
@@ -164,14 +234,7 @@ export default function PlanosPage() {
                     Você selecionou o plano <span className="font-semibold text-teal-600">{selectedPlan.name}</span>.
                   </p>
                 </div>
-                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => handlePaymentMethodSelect('pix')}
-                    className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-md shadow-sm text-lg font-semibold text-gray-800 bg-white hover:bg-gray-50 transition-colors"
-                  >
-                    <QrCode className="h-6 w-6"/>
-                    Pagar com Pix
-                  </button>
+                <div className="mt-6">
                   <button
                     onClick={() => handlePaymentMethodSelect('credit_card')}
                     className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-colors"
