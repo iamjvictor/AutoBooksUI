@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, User, BarChart3, Bot, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, User, BarChart3, Bot, X, LogOut, Share2, MessageSquare } from 'lucide-react';
 import { createClient } from '@/clients/supabaseClient'; // Ajuste o caminho se necessário
 import { useRouter } from 'next/navigation';
 
@@ -15,7 +15,9 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profile', label: 'Perfil', icon: User },
-  { href: '/crm', label: 'CRM', icon: BarChart3 },
+  { href: '/crm', label: 'CRM', icon: BarChart3, disabled: true, comingSoon: true },
+  { href: '/marketing', label: 'Campanhas', icon: Share2, disabled: true, comingSoon: true },
+  { href: '/canais', label: 'Meus Canais', icon: MessageSquare, disabled: true, comingSoon: true },
 ];
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -64,18 +66,30 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <ul className="space-y-2">
             {navItems.map((item) => (
               <li key={item.label}>
-                <Link
-                  href={item.href}
-                  onClick={onClose} 
-                  className={`flex items-center gap-3 p-3 rounded-md transition-colors ${
-                    pathname === item.href
-                      ? 'bg-teal-600 text-white'
-                      : 'hover:bg-gray-700'
-                  }`}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </Link>
+                {item.disabled ? (
+                  <div className="flex items-center gap-3 p-3 rounded-md transition-colors opacity-50 cursor-not-allowed">
+                    <item.icon className="h-5 w-5" />
+                    <span className="flex-1">{item.label}</span>
+                    {item.comingSoon && (
+                      <span className="bg-yellow-500 text-yellow-900 text-xs px-2 py-1 rounded-full font-medium">
+                        Em breve
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={onClose} 
+                    className={`flex items-center gap-3 p-3 rounded-md transition-colors ${
+                      pathname === item.href
+                        ? 'bg-teal-600 text-white'
+                        : 'hover:bg-gray-700'
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
