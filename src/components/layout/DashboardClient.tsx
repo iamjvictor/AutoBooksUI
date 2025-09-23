@@ -28,6 +28,9 @@ export default function DashboardClient() {
   const [stripeError, setStripeError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [pendingBalance, setPendingBalance] = useState<number | null>(null);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<number | null>(null);
+  const [monthlyBookings, setMonthlyBookings] = useState<number | null>(null);
+  const [monthlyLeads, setMonthlyLeads] = useState<number | null>(null);
  
   const [isVisible, setIsVisible] = useState(false);   // Controla se o saldo é visível
   const [loading2, setLoading] = useState(false);       // Controla o estado de carregamento
@@ -362,6 +365,7 @@ export default function DashboardClient() {
     checkOnboardingStatus();
     checkGoogleStatus(); // Verificar status do Google também
     checkWhatsappStatus(); // Verificar status do WhatsApp também
+    fetchMonthlyData(); // Buscar dados mensais
   }, [userData?.profile?.id, status]);
 
   // Verificar se usuário está inadimplente e redirecionar para planos
@@ -456,6 +460,59 @@ export default function DashboardClient() {
     } catch (error) {
       console.error('Erro ao verificar status do onboarding:', error);
       setVerificationData(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  // Função para buscar dados mensais
+  const fetchMonthlyData = async () => {
+    if (!userData?.profile?.id) return;
+
+    try {
+      const currentDate = new Date();
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+
+      // Buscar faturamento mensal (soma de total_price das reservas confirmadas)
+      const { data: revenueData, error: revenueError } = await supabase
+        .from('bookings')
+        .select('total_price')
+        .eq('user_id', profile.id)
+        .eq('status', 'confirmada')
+        .gte('created_at', startOfMonth.toISOString())
+        .lte('created_at', endOfMonth.toISOString());
+
+      if (!revenueError && revenueData) {
+        const totalRevenue = revenueData.reduce((sum, booking) => sum + (booking.total_price || 0), 0);
+        setMonthlyRevenue(totalRevenue);
+      }
+
+      // Buscar total de reservas confirmadas no mês
+      const { data: bookingsData, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('user_id', profile.id)
+        .eq('status', 'confirmada')
+        .gte('created_at', startOfMonth.toISOString())
+        .lte('created_at', endOfMonth.toISOString());
+
+      if (!bookingsError && bookingsData) {
+        setMonthlyBookings(bookingsData.length);
+      }
+
+      // Buscar total de leads capturados no mês
+      const { data: leadsData, error: leadsError } = await supabase
+        .from('leads')
+        .select('id')
+        .eq('user_id', userData.profile.id)
+        .gte('created_at', startOfMonth.toISOString())
+        .lte('created_at', endOfMonth.toISOString());
+
+      if (!leadsError && leadsData) {
+        setMonthlyLeads(leadsData.length);
+      }
+
+    } catch (error) {
+      console.error('Erro ao buscar dados mensais:', error);
     }
   };
 
@@ -568,6 +625,29 @@ export default function DashboardClient() {
     );
   };
 
+  const renderMonthlyRevenue = () => {
+    if (monthlyRevenue === null) {
+      return <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />;
+    }
+    return <span className="text-3xl font-bold text-green-600">{formatCurrency(monthlyRevenue * 100, 'BRL')}</span>;
+  };
+
+  const renderMonthlyBookings = () => {
+    console.log('monthlyBookings', monthlyBookings);
+    if (monthlyBookings === null) {
+      return <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />;
+    }
+    return <span className="text-3xl font-bold text-blue-600">{monthlyBookings}</span>;
+  };
+
+  const renderMonthlyLeads = () => {
+    console.log('monthlyLeads', monthlyLeads);
+    if (monthlyLeads === null) {
+      return <Loader2 className="h-8 w-8 text-teal-500 animate-spin" />;
+    }
+    return <span className="text-3xl font-bold text-purple-600">{monthlyLeads}</span>;
+  };
+
   // userData.hasGoogleIntegration || false;
 
   if (view === 'manage_rooms') {
@@ -667,45 +747,61 @@ export default function DashboardClient() {
 
           {/* Cards de KPI são exibidos apenas se o Stripe estiver pronto */}
           {isStripeReady && (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-             <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-md font-extrabold text-black">Saldo Disponível</p>
-                <button onClick={handleToggleVisibility} className="text-gray-500 hover:text-teal-600 transition">
-                  {isVisible ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
-                </button>
-              </div>
-              
-              <div className="mt-2 h-10 flex items-center">
-                {renderAvailableBalance()}
-              </div>            
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Card 1: Saldo Pendente */}
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-md font-extrabold text-black">Saldo Pendente</p>
+                  <button onClick={handleToggleVisibility} className="text-gray-500 hover:text-teal-600 transition">
+                    {isVisible ? <EyeOff className="h-6 w-6" /> : <Eye className="h-6 w-6" />}
+                  </button>
+                </div>
+                
+                <div className="mt-2 h-10 flex items-center">
+                  {renderPendingBalance()}
+                </div>
 
-              {/* Exibe a mensagem de erro detalhada abaixo do valor */}
-              {error && !loading && (
-                  <p className="text-xs text-red-600 mt-1">{error}</p>
-              )}
-            </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-md font-extrabold text-black">Saldo Pendente</p>
-              </div>
-              
-              <div className="mt-2 h-10 flex items-center">
-                {renderPendingBalance()}
+                {/* Exibe a mensagem de erro detalhada abaixo do valor */}
+                {error && !loading && (
+                    <p className="text-xs text-red-600 mt-1">{error}</p>
+                )}
               </div>
 
-              {/* Exibe a mensagem de erro detalhada abaixo do valor */}
-              {error && !loading && (
-                  <p className="text-xs text-red-600 mt-1">{error}</p>
-              )}
-            </div>
-               <div className="bg-white p-6 rounded-lg shadow-sm"> 
-                 <div className="flex items-center justify-between"> 
-                   <p className="text-md font-extrabold text-black">Reservas no Mês</p> 
-                   <CalendarDays className="h-6 w-6 text-teal-400" /> 
-                 </div> 
-                 <p className="mt-2 text-3xl font-bold text-teal-900">0</p> 
-               </div>
+              {/* Card 2: Faturamento Mensal */}
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-md font-extrabold text-black">Faturamento Mensal</p>
+                  <DollarSign className="h-6 w-6 text-green-400" />
+                </div>
+                
+                <div className="mt-2 h-10 flex items-center">
+                  {renderMonthlyRevenue()}
+                </div>
+              </div>
+
+              {/* Card 3: Reservas no Mês */}
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-md font-extrabold text-black">Reservas no Mês</p>
+                  <CalendarDays className="h-6 w-6 text-blue-400" />
+                </div>
+                
+                <div className="mt-2 h-10 flex items-center">
+                  {renderMonthlyBookings()}
+                </div>
+              </div>
+
+              {/* Card 4: Leads Capturados */}
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="flex items-center justify-between">
+                  <p className="text-md font-extrabold text-black">Leads Capturados</p>
+                  <MessageCircle className="h-6 w-6 text-purple-400" />
+                </div>
+                
+                <div className="mt-2 h-10 flex items-center">
+                  {renderMonthlyLeads()}
+                </div>
+              </div>
             </div>
           )}
         </div>
