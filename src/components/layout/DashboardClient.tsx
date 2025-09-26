@@ -181,7 +181,7 @@ export default function DashboardClient() {
     
     const params = new URLSearchParams({
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      redirect_uri: `http://localhost:4000/api/auth/google/callback`,
+      redirect_uri: `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/callback`,
       response_type: 'code',
       scope: scopes.join(' '),
       access_type: 'offline',
