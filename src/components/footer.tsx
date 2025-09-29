@@ -10,7 +10,7 @@ const supportLinks = [
 
 const legalLinks = [
     { name: "Termos de Uso", href: "#" },
-    { name: "Política de Privacidade", href: "#" },
+    { name: "Política de Privacidade", href: "/politicas" },
     { name: "LGPD", href: "#" },
 ]
 
@@ -81,7 +81,7 @@ export default function Footer() {
         {/* Seção Inferior */}
         <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24 flex flex-col sm:flex-row items-center justify-between">
           <p className="text-xs leading-5 text-gray-400 mb-4 sm:mb-0">
-            &copy; {new Date().getFullYear()} Atende.AI. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} AutoBooks. Todos os direitos reservados.
           </p>
           <div className="flex space-x-6">
             {legalLinks.map((link) => (
