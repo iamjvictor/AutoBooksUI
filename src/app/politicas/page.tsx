@@ -184,7 +184,7 @@ export default function PoliticasPage() {
             </p>
 
             <p className="text-gray-700 mb-4">
-              We do not knowingly collect, solicit data from, or market to children under 18 years of age, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or that you are the parent or guardian of such a minor and consent to such minor dependent's use of the Services.
+              We do not knowingly collect, solicit data from, or market to children under 18 years of age, nor do we knowingly sell such personal information. By using the Services, you represent that you are at least 18 or that you are the parent or guardian of such a minor and consent to such minor dependent&apos;s use of the Services.
             </p>
 
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">8. WHAT ARE YOUR PRIVACY RIGHTS?</h2>
