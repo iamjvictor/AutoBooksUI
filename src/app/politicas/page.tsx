@@ -18,7 +18,7 @@ export default function PoliticasPage() {
 
           <div className="prose max-w-none">
             <p className="text-gray-700 mb-6">
-              This Privacy Notice for <strong>Autobooks</strong> ("we," "us," or "our"), describes how and why we might access, collect, store, use, and/or share ("process") your personal information when you use our services ("Services"), including when you:
+              This Privacy Notice for <strong>Autobooks</strong> (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), describes how and why we might access, collect, store, use, and/or share (&quot;process&quot;) your personal information when you use our services (&quot;Services&quot;), including when you:
             </p>
 
             <ul className="list-disc pl-6 mb-6 text-gray-700">
@@ -260,3 +260,4 @@ export default function PoliticasPage() {
     </div>
   );
 }
+      

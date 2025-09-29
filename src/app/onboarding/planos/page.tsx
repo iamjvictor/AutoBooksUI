@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import { Check, Clock, CreditCard, QrCode } from "lucide-react";
+import { Check, Clock, CreditCard } from "lucide-react";
 import { plans, type Plan } from "@/data/plans";
 import { useRouter, useSearchParams } from "next/navigation";
 
