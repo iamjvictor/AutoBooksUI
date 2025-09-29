@@ -126,7 +126,7 @@ export default function PoliticasPage() {
             </p>
 
             <p className="text-gray-700 mb-4">
-              <strong>Vendors, Consultants, and Other Third-Party Service Providers.</strong> We may share your data with third-party vendors, service providers, contractors, or agents ("third parties") who perform services for us or on our behalf and require access to such information to do that work. We have contracts in place with our third parties, which are designed to help safeguard your personal information.
+              <strong>Vendors, Consultants, and Other Third-Party Service Providers.</strong> We may share your data with third-party vendors, service providers, contractors, or agents (&quot;third parties&quot;) who perform services for us or on our behalf and require access to such information to do that work. We have contracts in place with our third parties, which are designed to help safeguard your personal information.
             </p>
 
             <p className="text-gray-700 mb-4">The third parties we may share personal information with are as follows:</p>
@@ -143,12 +143,12 @@ export default function PoliticasPage() {
             </p>
 
             <p className="text-gray-700 mb-4">
-              As part of our Services, we offer products, features, or tools powered by artificial intelligence, machine learning, or similar technologies (collectively, "AI Products"). These tools are designed to enhance your experience and provide you with innovative solutions.
+              As part of our Services, we offer products, features, or tools powered by artificial intelligence, machine learning, or similar technologies (collectively, &quot;AI Products&quot;). These tools are designed to enhance your experience and provide you with innovative solutions.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Use of AI Technologies</h3>
             <p className="text-gray-700 mb-4">
-              We provide the AI Products through third-party service providers ("AI Service Providers"), including <strong>Google Cloud AI</strong>. Your input, output, and personal information will be shared with and processed by these AI Service Providers to enable your use of our AI Products.
+              We provide the AI Products through third-party service providers (&quot;AI Service Providers&quot;), including <strong>Google Cloud AI</strong>. Your input, output, and personal information will be shared with and processed by these AI Service Providers to enable your use of our AI Products.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Our AI Products</h3>
@@ -195,12 +195,12 @@ export default function PoliticasPage() {
 
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Withdrawing your consent:</h3>
             <p className="text-gray-700 mb-4">
-              If we are relying on your consent to process your personal information, you have the right to withdraw your consent at any time. You can withdraw your consent at any time by contacting us using the contact details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+              If we are relying on your consent to process your personal information, you have the right to withdraw your consent at any time. You can withdraw your consent at any time by contacting us using the contact details provided in the section &quot;HOW CAN YOU CONTACT US ABOUT THIS NOTICE?&quot; below.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Opting out of marketing and promotional communications:</h3>
             <p className="text-gray-700 mb-4">
-              You can unsubscribe from our marketing and promotional communications at any time by clicking on the unsubscribe link in the emails that we send, or by contacting us using the details provided in the section "HOW CAN YOU CONTACT US ABOUT THIS NOTICE?" below.
+              You can unsubscribe from our marketing and promotional communications at any time by clicking on the unsubscribe link in the emails that we send, or by contacting us using the details provided in the section &quot;HOW CAN YOU CONTACT US ABOUT THIS NOTICE?&quot; below.
             </p>
 
             <h3 className="text-xl font-semibold text-gray-900 mb-3">Account Information</h3>
@@ -216,7 +216,7 @@ export default function PoliticasPage() {
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">9. CONTROLS FOR DO-NOT-TRACK FEATURES</h2>
             
             <p className="text-gray-700 mb-4">
-              Most web browsers and some mobile operating systems and mobile applications include a Do-Not-Track ("DNT") feature or setting you can activate to signal your privacy preference not to have data about your online browsing activities monitored and collected. At this stage, no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals or any other mechanism that automatically communicates your choice not to be tracked online.
+              Most web browsers and some mobile operating systems and mobile applications include a Do-Not-Track (&quot;DNT&quot;) feature or setting you can activate to signal your privacy preference not to have data about your online browsing activities monitored and collected. At this stage, no uniform technology standard for recognizing and implementing DNT signals has been finalized. As such, we do not currently respond to DNT browser signals or any other mechanism that automatically communicates your choice not to be tracked online.
             </p>
 
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">10. DO WE MAKE UPDATES TO THIS NOTICE?</h2>
@@ -226,7 +226,7 @@ export default function PoliticasPage() {
             </p>
 
             <p className="text-gray-700 mb-4">
-              We may update this Privacy Notice from time to time. The updated version will be indicated by an updated "Revised" date at the top of this Privacy Notice. If we make material changes to this Privacy Notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.
+              We may update this Privacy Notice from time to time. The updated version will be indicated by an updated &quot;Revised&quot; date at the top of this Privacy Notice. If we make material changes to this Privacy Notice, we may notify you either by prominently posting a notice of such changes or by directly sending you a notification.
             </p>
 
             <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">11. HOW CAN YOU CONTACT US ABOUT THIS NOTICE?</h2>
