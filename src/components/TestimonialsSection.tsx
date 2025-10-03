@@ -53,7 +53,7 @@ export const TestimonialsSection = () => {
             <div key={testimonial.id} className="flex flex-col items-center p-8 bg-white rounded-lg shadow-lg">
               {/* Citação */}
               <p className="text-lg text-gray-700 italic mb-6 leading-relaxed">
-                "{testimonial.quote}"
+                &ldquo;{testimonial.quote}&rdquo;
               </p>
 
               {/* Imagem e Dados do Autor */}
