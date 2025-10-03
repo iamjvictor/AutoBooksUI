@@ -317,7 +317,7 @@ export default function DashboardClient() {
       setIsWhatsappConnected(false);
       setQrCode(null);
       setStatus('idle');
-      alert('WhatsApp desconectado com sucesso!');
+      
 
     } catch (error) {
       console.error('Erro ao desconectar WhatsApp:', error);
@@ -449,6 +449,9 @@ export default function DashboardClient() {
         .eq('user_id', profile.id)
         .limit(1);
 
+      console.log('Dados do perfil retornados:', profileData);
+      console.log('Status da assinatura:', profileData.subscription_status);
+      
       setVerificationData({
         subscriptionStatus: profileData.subscription_status,
         hasStripe: !!profileData.stripe_id,

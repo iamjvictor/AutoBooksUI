@@ -1,17 +1,11 @@
 // src/components/Footer.tsx
 import { Instagram, Mail, Phone, Bot } from "lucide-react";
 
-const supportLinks = [
-  { name: "Central de Ajuda", href: "#" },
-  { name: "Documentação", href: "#" },
-  { name: "Contato", href: "#" },
-  { name: "Status", href: "#" },
-];
 
 const legalLinks = [
-    { name: "Termos de Uso", href: "#" },
+    
     { name: "Política de Privacidade", href: "/politicas" },
-    { name: "LGPD", href: "#" },
+    
 ]
 
 export default function Footer() {
@@ -37,7 +31,7 @@ export default function Footer() {
                 <span className="sr-only">Instagram</span>
                 <Instagram className="h-6 w-6" />
               </a>
-              <a href="#" className="text-gray-400 hover:text-teal-400">
+              <a href="mailto:contato.autobooks@gmail.com" className="text-gray-400 hover:text-teal-400">
                 <span className="sr-only">Email</span>
                 <Mail className="h-6 w-6" />
               </a>
@@ -47,18 +41,7 @@ export default function Footer() {
           {/* Colunas 2 e 3: Links */}
           <div className="grid grid-cols-2 gap-8 lg:col-span-2">
             <div className="md:grid md:grid-cols-2 md:gap-8">
-                <div>
-                    <h3 className="text-sm font-semibold leading-6">Suporte</h3>
-                    <ul role="list" className="mt-6 space-y-4">
-                        {supportLinks.map((item) => (
-                        <li key={item.name}>
-                            <a href={item.href} className="text-sm leading-6 text-gray-300 hover:text-teal-400">
-                            {item.name}
-                            </a>
-                        </li>
-                        ))}
-                    </ul>
-                </div>
+              
             </div>
             <div className="md:grid md:grid-cols-1 md:gap-8">
                 <div>
@@ -66,11 +49,11 @@ export default function Footer() {
                     <ul role="list" className="mt-6 space-y-4">
                         <li className="flex items-center gap-2">
                             <Mail className="h-5 w-5 text-gray-400" />
-                            <a href="mailto:contato@atende.ai" className="text-sm text-gray-300 hover:text-teal-400">contato@atende.ai</a>
+                            <a href="mailto:contato.autobooks@gmail.com" className="text-sm text-gray-300 hover:text-teal-400">contato.autobooks@gmail.com</a>
                         </li>
                         <li className="flex items-center gap-2">
                             <Phone className="h-5 w-5 text-gray-400" />
-                            <span className="text-sm text-gray-300">(11) 9999-9999</span>
+                            <span className="text-sm text-gray-300">(22) 99876-2452</span>
                         </li>
                     </ul>
                 </div>

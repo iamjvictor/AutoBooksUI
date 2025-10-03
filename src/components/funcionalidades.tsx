@@ -2,8 +2,9 @@ import { Calendar, MessageCircle, CreditCard, Clock } from "lucide-react";
 
 export const Features = () => {
   return (
-    <section id="funcionalidades" className="py-16 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-6 text-center">
+    <section id="funcionalidades" className="py-16 bg-teal-100 pt-40">
+      
+      <div className="max-w-7xl mx-auto px-6 text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
           Tudo que você precisa em{" "}
           <span className="text-teal-600">uma plataforma</span>

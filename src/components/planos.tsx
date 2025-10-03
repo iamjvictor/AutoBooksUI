@@ -8,8 +8,14 @@ import { plans } from "../data/plans";
 export default function Pricing() {
   const nav = useRouter();
   return (
-    <section id="planos" className="bg-gray-50 py-20">
+    <section id="planos" className="bg-teal-100 pt-40">
+      
       <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t pb-20 border-gray-900" />
+        </div>
+        </div>
         <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           Escolha o plano ideal
         </h2>

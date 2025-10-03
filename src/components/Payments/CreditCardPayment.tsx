@@ -33,6 +33,8 @@ export default function CreditCardForm({ plan, onBack, onPaymentSuccess }: Credi
 
       // 2. Obter priceId do Stripe para o plano
       const priceId = plan.id;
+
+      console.log("priceId", priceId);
       if (!priceId) {
         throw new Error("Plano não encontrado. Tente novamente.");
       }

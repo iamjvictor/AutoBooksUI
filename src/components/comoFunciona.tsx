@@ -1,67 +1,87 @@
 // src/components/HowItWorks.tsx
-import { Building2, Share2, Upload, Sparkles } from "lucide-react";
+import {
+  Building2,     // Cadastro do Estabelecimento
+  FileText,      // Envio do PDF
+  Bed,           // Cadastro de Quartos
+  CreditCard,    // Configurar Conta Bancária (Stripe)
+  CalendarCheck, // Acesso Google Calendar
+  MessageSquare, // Conectar WhatsApp
+} from "lucide-react";
+import React from 'react'; // Importar React para JSX
 
 export default function HowItWorks() {
   const steps = [
     {
       id: 1,
-      title: "Cadastre seu estabelecimento",
-      description:
-        "Insira as informações do seu negócio para personalizar a assistente virtual.",
-      icon: <Building2 className="w-8 h-8 text-white" />, // Ícone de hotel/prédio
+      title: "1. Cadastro Rápido",
+      description: "Crie sua conta em segundos e insira os dados básicos do seu hotel ou pousada.",
+      icon: <Building2 className="w-7 h-7 text-teal-600" />,
     },
     {
       id: 2,
-      title: "Conecte suas contas",
-      description:
-        "Vincule WhatsApp, Instagram e outras redes sociais em segundos.",
-      icon: <Share2 className="w-8 h-8 text-white" />,
+      title: "2. Conhecimento Instantâneo",
+      description: "Envie um PDF com as informações do seu local para treinar sua IA em minutos.",
+      icon: <FileText className="w-7 h-7 text-teal-600" />,
     },
     {
       id: 3,
-      title: "Envie seu documento",
-      description:
-        "Faça upload das informações do seu estabelecimento para treinar a IA.",
-      icon: <Upload className="w-8 h-8 text-white" />,
+      title: "3. Quartos Disponíveis",
+      description: "Cadastre seus tipos de quartos, preços e regras para que a IA possa fazer reservas.",
+      icon: <Bed className="w-7 h-7 text-teal-600" />,
     },
     {
       id: 4,
-      title: "Deixe a IA trabalhar",
-      description:
-        "Sua assistente virtual está pronta para atender clientes 24/7.",
-      icon: <Sparkles className="w-8 h-8 text-white" />,
+      title: "4. Recebimento Fácil",
+      description: "Configure sua conta Stripe Connect para receber pagamentos diretamente dos seus hóspedes.",
+      icon: <CreditCard className="w-7 h-7 text-teal-600" />,
+    },
+    {
+      id: 5,
+      title: "5. Agenda Sincronizada",
+      description: "Conecte seu Google Calendar para gerenciar reservas e disponibilidade automaticamente.",
+      icon: <CalendarCheck className="w-7 h-7 text-teal-600" />,
+    },
+    {
+      id: 6,
+      title: "6. Ative seu WhatsApp",
+      description: "Vincule o número do seu WhatsApp para iniciar a automação e o atendimento 24/7.",
+      icon: <MessageSquare className="w-7 h-7 text-teal-600" />,
     },
   ];
 
   return (
-    <section id="como-funciona" className="py-20 bg-white">
-      <div className="max-w-6xl mx-auto px-6 text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">
-          Como funciona o <span className="text-teal-600">Atende.AI</span>
+    <section id="como-funciona" className="bg-white">
+      <div className="max-w-7xl mx-auto pt-30 bg-teal-100 px-6 lg:px-8 text-center">
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t pb-20 border-gray-900" />
+        </div>
+        </div>
+        <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
+          Comece a Automatizar em <span className="text-teal-600">Poucos Passos</span>
         </h2>
-        <p className="text-lg text-gray-600 mb-12">
-          Configuração simples em apenas 4 passos. Comece a automatizar seu
-          atendimento em menos de 5 minutos.
+        <p className="text-xl text-gray-600 mb-16 max-w-2xl mx-auto">
+          Simplifique sua gestão hoteleira com o AutoBooks. É mais fácil do que você imagina.
         </p>
 
-        <div className="grid md:grid-cols-4 gap-12">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-8">
           {steps.map((step) => (
-            <div key={step.id} className="flex flex-col items-center">
-              <div className="flex items-center justify-center w-16 h-16 rounded-xl bg-teal-600 shadow-lg mb-6">
+            <div key={step.id} className="flex flex-col items-center p-6 bg-white rounded-lg shadow-sm hover:shadow-lg hover:bg-gray-100 transition-shadow duration-300">
+              <div className="mb-4 text-teal-600">
                 {step.icon}
               </div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500 text-white text-sm font-bold">
-                  {step.id}
-                </span>
-                <h3 className="text-xl font-semibold text-gray-800">
-                  {step.title}
-                </h3>
-              </div>
-              <p className="text-gray-600 max-w-xs">{step.description}</p>
+              <h3 className="text-2xl font-semibold text-gray-800 mb-2">
+                {step.title}
+              </h3>
+              <p className="text-gray-600 max-w-xs leading-relaxed">
+                {step.description}
+              </p>
             </div>
           ))}
         </div>
+        
+    
+
       </div>
     </section>
   );

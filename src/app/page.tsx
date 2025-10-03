@@ -5,6 +5,8 @@ import HowItWorks from "@/components/comoFunciona";
 import Pricing from "@/components/planos";
 import Faq from "@/components/FAQ/faq";
 import Footer from "@/components/footer";
+import { PaymentsSection } from "@/components/PaymentSection";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
 
 export default function HomePage() {
   return (
@@ -13,7 +15,9 @@ export default function HomePage() {
       <Hero />
       <Features />
       <HowItWorks />
+      <PaymentsSection />
       <Pricing />
+      <TestimonialsSection /> {/* Ajuste o caminho se necessário */}  
       <Faq />
       <Footer />
 

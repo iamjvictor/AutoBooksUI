@@ -21,13 +21,13 @@ export const Header = () => {
 
         {/* Links de Navegação (centro) - some em telas pequenas */}
         <div className="hidden md:flex gap-8">
-          <Link href="#funcionalidades" className="text-gray-600 hover:text-teal-600 transition-colors">
+          <Link href="#funcionalidades" className="text-gray-600 hover:text-[#047857] transition-colors">
             Funcionalidades
           </Link>
-          <Link href="#planos" className="text-gray-600 hover:text-teal-600 transition-colors">
+          <Link href="#planos" className="text-gray-600 hover:text-[#047857] transition-colors">
             Planos
           </Link>
-          <Link href="#como-funciona" className="text-gray-600 hover:text-teal-600 transition-colors">
+          <Link href="#como-funciona" className="text-gray-600 hover:text-[#047857] transition-colors">
             Como Funciona
           </Link>
         </div>
@@ -43,7 +43,7 @@ export const Header = () => {
           <Link 
             
             href="/register" 
-            className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-[#047857] rounded-md hover:bg-[#065f46] transition-colors"
           >
             Começar Agora
           </Link>
