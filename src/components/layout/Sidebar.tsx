@@ -38,7 +38,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/60 z-40 lg:hidden ${ // Adicionado lg:hidden
+        className={`fixed inset-0 bg-black/60 z-40 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
@@ -47,7 +47,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       
       {/* Conteúdo do Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 ${ // Adicionado flex flex-col e lg:translate-x-0
+        className={`fixed top-0 left-0 h-full w-64 bg-gray-800 text-white p-4 z-50 flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -56,7 +56,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <span className="text-2xl">🛎️</span>
             <span className="text-xl font-bold">AutoBooks</span>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700 lg:hidden"> {/* Adicionado lg:hidden */}
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-700">
             <X className="h-6 w-6" />
           </button>
         </div>

@@ -10,7 +10,7 @@ import { TestimonialsSection } from "@/components/TestimonialsSection";
 
 export default function HomePage() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF7] text-gray-800 font-sans">
+    <main className="flex flex-col items-center bg-gray-200 justify-center  min-h-screen bg-[#FDFBF7] text-gray-800 font-sans">
       <Header />
       <Hero />
       <Features />
