@@ -94,7 +94,7 @@ export default function DashboardClient() {
       if (response.ok) {
         const data = await response.json();
         console.log('data', data);
-        if(data.deviceId === deviceId){
+        if(data.connected === true){
           setIsWhatsappConnected(true);
         }
        
