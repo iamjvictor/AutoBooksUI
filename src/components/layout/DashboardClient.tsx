@@ -85,7 +85,7 @@ export default function DashboardClient() {
       }
 
       const deviceId = `device-${userData.profile.whatsapp_number.replace(/\D/g, '')}`;
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/devices/status/${encodeURIComponent(deviceId)}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/status/${encodeURIComponent(deviceId)}`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${session.access_token}` },
       });
