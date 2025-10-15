@@ -1,66 +1,80 @@
-import { Calendar, MessageCircle, CreditCard, Clock } from "lucide-react";
+import { Calendar, MessageSquare, BrainCircuit, BotMessageSquare } from "lucide-react";
+import React from 'react';
+
+// Sub-componente para cada card de funcionalidade, para um código mais limpo
+const FeatureCard = (
+  { icon: Icon, title, description, isComingSoon }: { icon: React.ElementType, title: string, description: string, isComingSoon?: boolean }
+) => (
+  <div className={`
+    bg-white/5 border border-white/10 rounded-2xl p-6 text-center
+    flex flex-col items-center transition-all duration-300
+    ${isComingSoon ? 'opacity-50' : 'hover:bg-white/10 hover:-translate-y-2'}
+  `}>
+    <div className="mb-4 text-teal-400 bg-white/10 p-3 rounded-lg">
+      <Icon className="w-8 h-8" strokeWidth={1.5} />
+    </div>
+    <h3 className={`font-bold text-lg ${isComingSoon ? 'text-slate-400' : 'text-teal-400'}`}>
+      {title}
+    </h3>
+    <p className={`mt-2 ${isComingSoon ? 'text-slate-500' : 'text-slate-400'} text-sm`}>
+      {description}
+    </p>
+  </div>
+);
 
 export const Features = () => {
+  const featuresList = [
+    {
+      icon: MessageSquare,
+      title: "Gateway de WhatsApp Integrado",
+      description: "Conecte seu número e centralize todas as conversas e reservas em uma única plataforma, gerida pelo PM2 para máxima estabilidade."
+    },
+    {
+      icon: Calendar,
+      title: "Gestão de Reservas com IA",
+      description: "Alfred, sua IA, agenda e confirma reservas diretamente no chat, com links de pagamento da Stripe integrados."
+    },
+    {
+      icon: BrainCircuit,
+      title: "Atendimento Inteligente 24/7",
+      description: "A IA é treinada com as suas regras e informações, respondendo a perguntas frequentes e libertando a sua equipa."
+    },
+    {
+      icon: BotMessageSquare,
+      title: "Em breve: Dashboard Analítico",
+      description: "Visualize métricas de atendimento, taxas de conversão e insights sobre as perguntas mais frequentes dos seus clientes.",
+      isComingSoon: true
+    }
+  ];
+
   return (
-    <section id="funcionalidades" className="py-16 bg-teal-100 pt-40">
-      
-      <div className="max-w-7xl mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-800">
-          Tudo que você precisa em{" "}
-          <span className="text-teal-600">uma plataforma</span>
-        </h2>
-        <p className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-          Centralize seu atendimento, automatize reservas e pagamentos com
-          ferramentas pensadas especialmente para o setor de hospitalidade.
-        </p>
-
-        {/* Cards */}
-        <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-          {/* Integração com WhatsApp */}
-          <div className="p-6 bg-white rounded-xl shadow-md border hover:shadow-lg transition">
-            <MessageCircle className="w-10 h-10 text-teal-600 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg text-gray-800">
-              Integração com WhatsApp
-            </h3>
-            <p className="mt-2 text-gray-600 text-sm">
-              Conecte seu número e gerencie todas as conversas em um só lugar.
-            </p>
-          </div>
-
-          {/* Gestão de Reservas com IA */}
-          <div className="p-6 bg-white rounded-xl shadow-md border hover:shadow-lg transition">
-            <Calendar className="w-10 h-10 text-teal-600 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg text-gray-800">
-              Gestão de Reservas
-            </h3>
-            <p className="mt-2 text-gray-600 text-sm">
-              A IA agenda e confirma reservas diretamente no WhatsApp, com
-              pagamento integrado.
-            </p>
-          </div>
-
-          {/* Atendimento Inteligente */}
-          <div className="p-6 bg-white rounded-xl shadow-md border hover:shadow-lg transition">
-            <Clock className="w-10 h-10 text-teal-600 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg text-gray-800">
-              Atendimento Inteligente
-            </h3>
-            <p className="mt-2 text-gray-600 text-sm">
-              A IA responde automaticamente seguindo as regras e informações do
-              seu estabelecimento.
-            </p>
-          </div>
-
-          {/* Em breve */}
-          <div className="p-6 bg-white rounded-xl shadow-md border hover:shadow-lg transition opacity-70">
-            <CreditCard className="w-10 h-10 text-gray-400 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg text-gray-500">Em breve</h3>
-            <p className="mt-2 text-gray-500 text-sm">
-              Novas funcionalidades exclusivas serão lançadas em breve.
-            </p>
-          </div>
+    <section id="funcionalidades" className="bg-[#121829] text-white font-sans py-20 sm:py-32">
+      <div className="w-full max-w-7xl mx-auto px-6 lg:px-8">
+        {/* Cabeçalho da Seção */}
+        <div className="text-center max-w-3xl mx-auto">
+          <h2 className="text-4xl font-extrabold text-white sm:text-5xl tracking-tight">
+            Tudo que você precisa em <span className="text-teal-400">uma plataforma</span>
+          </h2>
+          <p className="mt-4 text-lg text-slate-400">
+            Centralize seu atendimento, automatize reservas e pagamentos com ferramentas pensadas para o setor de hospitalidade.
+          </p>
+        </div>
+        
+        {/* Grid com os cards */}
+        <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          {featuresList.map((feature, index) => (
+            <FeatureCard
+              key={index}
+              icon={feature.icon}
+              title={feature.title}
+              description={feature.description}
+              isComingSoon={feature.isComingSoon}
+            />
+          ))}
         </div>
       </div>
     </section>
   );
 }
+
+export default Features;

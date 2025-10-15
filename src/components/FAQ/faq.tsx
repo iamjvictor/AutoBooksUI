@@ -71,18 +71,17 @@ const faqData = [
 
 export default function Faq() {
   return (
-    <section id="faq" className="bg-teal-100 py-20 sm:py-28">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t pb-20 border-gray-900" />
-        </div>
+    <section className=" bg-[#121829] text-white font-sans min-h-screen flex items-center">
+    <div className="w-full  mx-auto px-6 lg:px-8 py-24 sm:py-32">
+      
+       <div className="text-center">
+       
         </div>
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-white-900 sm:text-4xl">
             Perguntas <span className="text-teal-600">Frequentes</span>
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-white-600">
             Esclarecemos as principais dúvidas sobre o Atende.AI
           </p>
         </div>

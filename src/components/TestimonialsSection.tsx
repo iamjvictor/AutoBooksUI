@@ -32,21 +32,17 @@ const testimonials = [
 
 export const TestimonialsSection = () => {
   return (
-    <section id="depoimentos" className=" bg-gray-50">
-
-      <div className="max-w-7xl bg-teal-100 mx-auto px-6 pt-30 lg:px-8 text-center">
-        <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-            <div className="w-full border-t pb-20 border-gray-900" />
+    <section className=" bg-[#121829] text-white font-sans min-h-screen flex items-center">
+     <div className="w-full  mx-auto px-6 lg:px-8 py-24 sm:py-32">
+       
+        <div className="text-center">
+          <h2 className="text-4xl font-extrabold text-white-800 sm:text-5xl tracking-tight text-center mt900 mb-4">
+            O que nossos parceiros estão <span className="text-teal-600">dizendo</span>
+          </h2>
+          <p className="text-xl text-white-600 mb-16 max-w-2xl mx-auto">
+            Veja como o AutoBooks está transformando a gestão e o atendimento em hotéis e pousadas.
+          </p>
         </div>
-        </div>
-        
-        <h2 className="text-4xl font-extrabold text-gray-900 mb-4">
-          O que nossos parceiros estão <span className="text-teal-600">dizendo</span>
-        </h2>
-        <p className="text-xl text-gray-600 mb-16 max-w-2xl mx-auto">
-          Veja como o AutoBooks está transformando a gestão e o atendimento em hotéis e pousadas.
-        </p>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-y-12 gap-x-8">
           {testimonials.map((testimonial) => (
