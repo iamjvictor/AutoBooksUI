@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, User, BarChart3, Bot, X, LogOut, Share2, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, User, BarChart3, Bot, X, LogOut, Share2, MessageSquare, Calendar } from 'lucide-react';
 import { createClient } from '@/clients/supabaseClient'; // Ajuste o caminho se necessário
 import { useRouter } from 'next/navigation';
 
@@ -15,6 +15,7 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/profile', label: 'Perfil', icon: User },
+  { href: '/reservas', label: 'Reservas', icon: Calendar },
   { href: '/crm', label: 'CRM', icon: BarChart3, disabled: true, comingSoon: true },
   { href: '/marketing', label: 'Campanhas', icon: Share2, disabled: true, comingSoon: true },
   { href: '/canais', label: 'Meus Canais', icon: MessageSquare, disabled: true, comingSoon: true },

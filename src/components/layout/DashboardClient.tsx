@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import RoomTypeManager from '../infoUpload';
 import PdfUpload from '../pdfUpload';
 import axios from 'axios';
+import WhatsappPreconnectCard from '../WhatsappPreconnectCard';
 
 interface Balance {
   amount: number;
@@ -41,6 +42,7 @@ export default function DashboardClient() {
   const [isGoogleConnected, setIsGoogleConnected] = useState<boolean | null>(null); // Estado dinâmico do Google
   const [isWhatsappConnected, setIsWhatsappConnected] = useState<boolean>(false); // Estado do WhatsApp
   const [whatsappDisconnectLoading, setWhatsappDisconnectLoading] = useState(false); // Loading da desconexão WhatsApp
+  const [showWhatsappPreconnect, setShowWhatsappPreconnect] = useState(false); // Exibir card de avisos antes de conectar
 
   // Estado para armazenar dados de verificação
   const [verificationData, setVerificationData] = useState({
@@ -247,6 +249,8 @@ export default function DashboardClient() {
   
 
   const handleConnectWhatsapp = async () => {
+    console.log("Iniciando conexão com WhatsApp...");
+
     setIsConnectingWhatsapp(true);
     setQrCode(null);
     try {
@@ -828,7 +832,7 @@ export default function DashboardClient() {
                       </button>
                     ) : (
                       <button
-                        onClick={handleConnectWhatsapp}
+                        onClick={() => setShowWhatsappPreconnect(true)}
                         disabled={!isGoogleAgendaConnected || isConnectingWhatsapp}
                         className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2 bg-teal-600 text-white rounded-md font-semibold transition-colors hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
@@ -922,7 +926,28 @@ export default function DashboardClient() {
             </div>
         </div>
 
-        {/* --- CARDS DE GERENCIAMENTO --- */}
+      {/* Modal de pré-conexão do WhatsApp */}
+      {showWhatsappPreconnect && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <WhatsappPreconnectCard
+            warnings={[
+              'Para o perfeito funcionamento, mantenha o telefone sincronizado sempre ligado e conectado.',
+              'Use este navegador exclusivamente durante a conexão.',
+              'Pode ser necessária reconexão periódica.',
+              'Antes de conectar seu WhatsApp no sistema, remova a conexão com o WhatsApp Web.',
+              'Não abrir o WhatsApp Web com o número sincronizado na plataforma em outro navegador. Caso isso aconteça, o funcionamento poderá ser impactado',
+
+            ]}
+            onContinue={() => {
+              setShowWhatsappPreconnect(false);
+              void handleConnectWhatsapp();
+            }}
+            onCancel={() => setShowWhatsappPreconnect(false)}
+          />
+        </div>
+      )}
+
+      {/* --- CARDS DE GERENCIAMENTO --- */}
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
              <div className="bg-white p-6 rounded-lg shadow-sm"> 
                 <h3 className="text-lg font-semibold text-gray-900">Gerenciar Acomodações</h3> 
