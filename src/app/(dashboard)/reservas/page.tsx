@@ -44,6 +44,15 @@ interface Booking {
 type ViewMode = 'list' | 'calendar';
 type StatusFilter = 'all' | 'pendente' | 'confirmada' | 'cancelada' | 'concluida' | 'expired';
 
+interface CalendarEvent {
+  id: number;
+  title: string;
+  start: Date | string;
+  end: Date | string;
+  resource: Booking;
+  status: string;
+}
+
 // Configurar o localizer para português brasileiro
 moment.locale('pt-br');
 const localizer = momentLocalizer(moment);
@@ -154,7 +163,7 @@ export default function ReservasPage() {
     console.log('Converting bookings to events:', bookings.length);
     return bookings.map(booking => {
       // Criar datas em UTC para evitar problemas de timezone
-      const startDate = new Date(booking.check_in_date + 'T00:00:00.000Z');
+      const startDate = new Date(booking.check_in_date);
       const endDate = new Date(booking.check_out_date + 'T00:00:00.000Z');
       
       // Adicionar 1 dia à data de checkout porque react-big-calendar trata end como exclusiva
@@ -176,7 +185,7 @@ export default function ReservasPage() {
   };
 
   // Obter cor do evento baseado no status
-  const getEventStyle = (event: any) => {
+  const getEventStyle = (event: CalendarEvent) => {
     const status = event.resource?.status;
     switch (status) {
       case 'confirmada':
