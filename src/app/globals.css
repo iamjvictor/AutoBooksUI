@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import 'react-phone-number-input/style.css';
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 @tailwind base;
 @tailwind components;
@@ -40,4 +41,150 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* BigCalendar Custom Styles */
+.calendar-container .rbc-calendar {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-header {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+.calendar-container .rbc-date-cell {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-date-cell a {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-toolbar {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-toolbar button {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-toolbar-label {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+.calendar-container .rbc-month-view {
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-container .rbc-day-bg {
+  border: 1px solid #e5e7eb;
+}
+
+.calendar-container .rbc-today {
+  background-color: #f0f9ff !important;
+}
+
+.calendar-container .rbc-off-range-bg {
+  background-color: #f9fafb !important;
+}
+
+.calendar-container .rbc-off-range {
+  color: #9ca3af !important;
+}
+
+.calendar-container .rbc-event {
+  border-radius: 4px;
+  font-weight: 500;
+  color: white !important;
+}
+
+.calendar-container .rbc-event-content {
+  color: white !important;
+}
+
+.calendar-container .rbc-show-more {
+  color: #000000 !important;
+  background-color: #f3f4f6 !important;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.calendar-container .rbc-time-view {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-time-header {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-time-header-content {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-timeslot-group {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-time-slot {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-day-slot {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-time-content {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-agenda-view {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-agenda-date-cell {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-agenda-time-cell {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-agenda-event-cell {
+  color: #000000 !important;
+}
+
+/* Legend text styles */
+.calendar-container .legend-text,
+.calendar-container .legend-item span,
+.calendar-container .legend-item .legend-text {
+  color: #000000 !important;
+}
+
+/* Force legend text to be black */
+.calendar-container .legend-item span {
+  color: #000000 !important;
+}
+
+.calendar-container .legend-text {
+  color: #000000 !important;
+}
+
+/* Additional calendar text fixes */
+.calendar-container .rbc-btn-group button {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-btn-group button:hover {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-btn-group button:focus {
+  color: #000000 !important;
+}
+
+.calendar-container .rbc-btn-group button.rbc-active {
+  color: #000000 !important;
 }
