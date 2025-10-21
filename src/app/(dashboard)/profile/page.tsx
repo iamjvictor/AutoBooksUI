@@ -245,7 +245,7 @@ export default function ProfilePage() {
     router.push('/onboarding/planos');
   };
 
-  // Função para criar sessão do portal Stripe
+  // Função para acessar conta Stripe Connect
   const handleCreatePortalSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -264,20 +264,23 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Falha ao criar sessão do portal.");
+        throw new Error(errorData.error || "Falha ao acessar conta Stripe Connect.");
       }
 
       const { url } = await response.json();
       
-      // Redirecionar para o portal do Stripe
+      // Mostrar mensagem informativa
+      alert("Redirecionando para sua conta Stripe Connect...");
+      
+      // Abrir conta Connect em nova aba
       window.open(url, '_blank');
       
     } catch (error) {
-      console.error('Erro ao criar sessão do portal:', error);
+      console.error('Erro ao acessar conta Stripe Connect:', error);
       if (error instanceof Error) {
         alert(error.message);
       } else {
-        alert("Ocorreu um erro ao acessar o portal de pagamentos.");
+        alert("Ocorreu um erro ao acessar sua conta Stripe Connect.");
       }
     }
   };
@@ -477,14 +480,14 @@ export default function ProfilePage() {
             Redefinir senha
           </button>
           
-          {/* Botão para acessar portal Stripe */}
+          {/* Botão para acessar conta Stripe Connect */}
           <button
             type="button"
             onClick={handleCreatePortalSession}
             className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-150 ease-in-out cursor-pointer"
           >
             <ExternalLink size={20} />
-            Portal de Pagamentos
+            Conta Stripe Connect
           </button>
           
           {/* Botão Condicional: Assinar Plano ou Cancelar Plano */}
