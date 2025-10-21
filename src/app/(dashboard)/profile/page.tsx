@@ -182,18 +182,39 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
-  // Função para verificar se o plano foi cancelado e vai terminar
+  // Função para verificar se o plano foi cancelado
   const isPlanCancelled = () => {
     if (!formData) return false;
     
-    const { subscription_status, current_period_ends_at } = formData;
+    // Se não está cancelado, retorna false
+    if (formData.subscription_status !== 'cancelled') return false;
     
-    // Verifica se o status indica cancelamento ou se há uma data de fim de período
-    const isCancelled = subscription_status === 'canceled' || 
-                       subscription_status === 'canceling' ||
-                       (current_period_ends_at && subscription_status === 'active');
+    // Se está cancelado, verifica se já passou da data de término
+    if (formData.current_period_ends_at) {
+      const endDate = new Date(formData.current_period_ends_at);
+      const now = new Date();
+      return now > endDate; // Só considera cancelado se já passou da data
+    }
     
-    return isCancelled;
+    // Se não há data de término, considera cancelado
+    return true;
+  };
+
+  // Função para verificar se o plano está cancelando (cancelado mas ainda ativo)
+  const isPlanCancelling = () => {
+    if (!formData) return false;
+    
+    // Se não está cancelado, retorna false
+    if (formData.subscription_status !== 'cancelled') return false;
+    
+    // Se está cancelado, verifica se ainda não passou da data de término
+    if (formData.current_period_ends_at) {
+      const endDate = new Date(formData.current_period_ends_at);
+      const now = new Date();
+      return now <= endDate; // Ainda ativo até a data de término
+    }
+    
+    return false;
   };
 
   // Função para obter a data de fim do período atual
@@ -215,7 +236,8 @@ export default function ProfilePage() {
 
   // Função para verificar se deve mostrar o botão de assinar plano
   const shouldShowSubscribeButton = () => {
-    return formData?.current_period_ends_at && formData?.subscription_status !== 'canceled';
+    // Mostra o botão se está cancelando (cancelado mas ainda ativo) ou se está realmente cancelado
+    return isPlanCancelling() || isPlanCancelled();
   };
 
   // Função para navegar para a página de planos
@@ -233,27 +255,51 @@ export default function ProfilePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-3xl mx-auto">
-        {/* Alerta de plano cancelado */}
-        {isPlanCancelled() && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        {/* Alerta de plano cancelado/cancelando */}
+        {(isPlanCancelled() || isPlanCancelling()) && (
+          <div className={`mb-6 border rounded-lg p-4 ${
+            isPlanCancelled() 
+              ? 'bg-red-50 border-red-200' 
+              : 'bg-yellow-50 border-yellow-200'
+          }`}>
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className={`h-5 w-5 ${
+                  isPlanCancelled() ? 'text-red-400' : 'text-yellow-400'
+                }`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Plano Cancelado
+                <h3 className={`text-sm font-medium ${
+                  isPlanCancelled() ? 'text-red-800' : 'text-yellow-800'
+                }`}>
+                  {isPlanCancelled() ? 'Plano Cancelado' : 'Plano Cancelando'}
                 </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>
-                    Seu plano foi cancelado e terminará em{' '}
-                    <strong>{getPeriodEndDate() || 'data não informada'}</strong>.
-                  </p>
-                  <p className="mt-1">
-                    Você ainda tem acesso às funcionalidades até o final do período pago.
-                  </p>
+                <div className={`mt-2 text-sm ${
+                  isPlanCancelled() ? 'text-red-700' : 'text-yellow-700'
+                }`}>
+                  {isPlanCancelled() ? (
+                    <>
+                      <p>
+                        Seu plano foi cancelado e terminou em{' '}
+                        <strong>{getPeriodEndDate() || 'data não informada'}</strong>.
+                      </p>
+                      <p className="mt-1">
+                        Você não tem mais acesso às funcionalidades premium.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p>
+                        Seu plano foi cancelado e terminará em{' '}
+                        <strong>{getPeriodEndDate() || 'data não informada'}</strong>.
+                      </p>
+                      <p className="mt-1">
+                        Você ainda tem acesso às funcionalidades até o final do período pago.
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -349,17 +395,19 @@ export default function ProfilePage() {
               </dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  formData.subscription_status === 'active' && !isPlanCancelled() 
+                  formData.subscription_status === 'active' && !isPlanCancelling() && !isPlanCancelled()
                     ? 'bg-green-100 text-green-800' 
-                    : formData.subscription_status === 'canceled' || isPlanCancelled()
+                    : isPlanCancelled()
                     ? 'bg-red-100 text-red-800'
+                    : isPlanCancelling()
+                    ? 'bg-yellow-100 text-yellow-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {formData.subscription_status === 'active' && !isPlanCancelled() 
+                  {formData.subscription_status === 'active' && !isPlanCancelling() && !isPlanCancelled()
                     ? 'Ativa' 
-                    : formData.subscription_status === 'canceled' 
-                    ? 'Cancelada'
                     : isPlanCancelled()
+                    ? 'Cancelada'
+                    : isPlanCancelling()
                     ? 'Cancelando'
                     : formData.subscription_status || 'Não informado'
                   }
@@ -413,8 +461,8 @@ export default function ProfilePage() {
           )}
         </div>
         
-        {/* Exibir data de encerramento quando houver current_period_ends_at */}
-        {formData?.current_period_ends_at && (
+        {/* Exibir data de encerramento quando houver current_period_ends_at e estiver cancelando */}
+        {formData?.current_period_ends_at && isPlanCancelling() && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <div className="flex items-center">
               <svg className="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
