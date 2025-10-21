@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { createClient } from "@/clients/supabaseClient";
-import { User, Building, Phone, MapPin, Loader2, Pencil, Save, X } from "lucide-react";
+import { User, Building, Phone, MapPin, Loader2, Pencil, Save, X, CreditCard } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { UserProfile } from "@/types/user";
 import Toast from "@/components/common/Toast";
 import { E164Number } from "libphonenumber-js/core";
@@ -54,11 +55,13 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [supabase] = useState(() => createClient());
-   const [whatsappNumber, setWhatsappNumber] = useState<E164Number | undefined>();
+  const [whatsappNumber, setWhatsappNumber] = useState<E164Number | undefined>();
+  const router = useRouter();
 
   useEffect(() => {
     if (userData?.profile) {
       setFormData(userData.profile);
+      console.log("userData.profile", userData.profile);
     }
   }, [userData]);
 
@@ -179,6 +182,47 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
+  // Função para verificar se o plano foi cancelado e vai terminar
+  const isPlanCancelled = () => {
+    if (!formData) return false;
+    
+    const { subscription_status, current_period_ends_at } = formData;
+    
+    // Verifica se o status indica cancelamento ou se há uma data de fim de período
+    const isCancelled = subscription_status === 'canceled' || 
+                       subscription_status === 'canceling' ||
+                       (current_period_ends_at && subscription_status === 'active');
+    
+    return isCancelled;
+  };
+
+  // Função para obter a data de fim do período atual
+  const getPeriodEndDate = () => {
+    if (!formData?.current_period_ends_at) return null;
+    
+    try {
+      const date = new Date(formData.current_period_ends_at);
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return null;
+    }
+  };
+
+  // Função para verificar se deve mostrar o botão de assinar plano
+  const shouldShowSubscribeButton = () => {
+    return formData?.current_period_ends_at && formData?.subscription_status !== 'canceled';
+  };
+
+  // Função para navegar para a página de planos
+  const handleSubscribePlan = () => {
+    router.push('/onboarding/planos');
+  };
+
   if (userLoading) {
     return <div className="p-8">Carregando...</div>;
   }
@@ -189,6 +233,33 @@ export default function ProfilePage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-3xl mx-auto">
+        {/* Alerta de plano cancelado */}
+        {isPlanCancelled() && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Plano Cancelado
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>
+                    Seu plano foi cancelado e terminará em{' '}
+                    <strong>{getPeriodEndDate() || 'data não informada'}</strong>.
+                  </p>
+                  <p className="mt-1">
+                    Você ainda tem acesso às funcionalidades até o final do período pago.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="bg-teal-100 p-6 rounded-lg shadow-sm">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
            <div className="w-full flex justify-between items-center border-b border-gray-200 pb-4 mb-4">
@@ -267,6 +338,48 @@ export default function ProfilePage() {
             <ProfileField label="Cidade" name="city" value={formData.city || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />
             <ProfileField label="Estado" name="state" value={formData.state || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />
             <ProfileField label="CEP" name="zip_code" value={formData.zip_code || ''} icon={MapPin} isEditing={isEditing} handleChange={handleChange} />
+            
+            {/* Informações da Assinatura */}
+            <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center border-t border-gray-200">
+              <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Status da Assinatura
+              </dt>
+              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  formData.subscription_status === 'active' && !isPlanCancelled() 
+                    ? 'bg-green-100 text-green-800' 
+                    : formData.subscription_status === 'canceled' || isPlanCancelled()
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {formData.subscription_status === 'active' && !isPlanCancelled() 
+                    ? 'Ativa' 
+                    : formData.subscription_status === 'canceled' 
+                    ? 'Cancelada'
+                    : isPlanCancelled()
+                    ? 'Cancelando'
+                    : formData.subscription_status || 'Não informado'
+                  }
+                </span>
+              </dd>
+            </div>
+            
+            {formData.current_period_ends_at && (
+              <div className="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center">
+                <dt className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Período Atual Termina
+                </dt>
+                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                  <span className="py-2 block">{getPeriodEndDate() || 'Não informado'}</span>
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
         <div className="flex justify-start items-center gap-4 pt-6 border-t mt-2">
@@ -278,16 +391,41 @@ export default function ProfilePage() {
           >
             Redefinir senha
           </button>
-          <button
-            type="button" // Importante ser 'button' para não submeter o formulário
-            onClick={cancelPlan}
-            className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
-          >
-            Cancelar Plano
-          </button>
-
           
+          {/* Botão Condicional: Assinar Plano ou Cancelar Plano */}
+          {shouldShowSubscribeButton() ? (
+            <button
+              type="button"
+              onClick={handleSubscribePlan}
+              className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-150 ease-in-out cursor-pointer"
+            >
+              <CreditCard size={20} />
+              Assinar Plano
+            </button>
+          ) : (
+            <button
+              type="button" // Importante ser 'button' para não submeter o formulário
+              onClick={cancelPlan}
+              className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
+            >
+              Cancelar Plano
+            </button>
+          )}
         </div>
+        
+        {/* Exibir data de encerramento quando houver current_period_ends_at */}
+        {formData?.current_period_ends_at && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-sm text-yellow-800">
+                <strong>Seu plano atual termina em:</strong> {getPeriodEndDate()}
+              </p>
+            </div>
+          </div>
+        )}
 
       
 
