@@ -267,13 +267,17 @@ export default function ProfilePage() {
         throw new Error(errorData.error || "Falha ao acessar conta Stripe Connect.");
       }
 
-      const { url } = await response.json();
+      const data = await response.json();
       
-      // Mostrar mensagem informativa
-      alert("Redirecionando para sua conta Stripe Connect...");
+      // Mostrar mensagem baseada no tipo de link
+      if (data.type === 'onboarding') {
+        alert("Redirecionando para completar a configuração da sua conta Stripe Connect...");
+      } else {
+        alert("Redirecionando para sua conta Stripe Connect...");
+      }
       
       // Abrir conta Connect em nova aba
-      window.open(url, '_blank');
+      window.open(data.url, '_blank');
       
     } catch (error) {
       console.error('Erro ao acessar conta Stripe Connect:', error);
