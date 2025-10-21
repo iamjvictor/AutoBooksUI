@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import { createClient } from "@/clients/supabaseClient";
-import { User, Building, Phone, MapPin, Loader2, Pencil, Save, X, CreditCard } from "lucide-react";
+import { User, Building, Phone, MapPin, Loader2, Pencil, Save, X, CreditCard, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { UserProfile } from "@/types/user";
@@ -245,6 +245,43 @@ export default function ProfilePage() {
     router.push('/onboarding/planos');
   };
 
+  // Função para criar sessão do portal Stripe
+  const handleCreatePortalSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert("Sessão não encontrada. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stripe/create-portal-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Falha ao criar sessão do portal.");
+      }
+
+      const { url } = await response.json();
+      
+      // Redirecionar para o portal do Stripe
+      window.open(url, '_blank');
+      
+    } catch (error) {
+      console.error('Erro ao criar sessão do portal:', error);
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("Ocorreu um erro ao acessar o portal de pagamentos.");
+      }
+    }
+  };
+
   if (userLoading) {
     return <div className="p-8">Carregando...</div>;
   }
@@ -438,6 +475,16 @@ export default function ProfilePage() {
             className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors duration-150 ease-in-out cursor-pointer disabled:bg-teal-400 disabled:cursor-not-allowed"
           >
             Redefinir senha
+          </button>
+          
+          {/* Botão para acessar portal Stripe */}
+          <button
+            type="button"
+            onClick={handleCreatePortalSession}
+            className="flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-lg font-semibold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-150 ease-in-out cursor-pointer"
+          >
+            <ExternalLink size={20} />
+            Portal de Pagamentos
           </button>
           
           {/* Botão Condicional: Assinar Plano ou Cancelar Plano */}
